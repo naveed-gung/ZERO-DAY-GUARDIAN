@@ -69,7 +69,7 @@ async fn main() -> Result<()> {
     info!("Loading eBPF programs...");
     let mut ebpf = Ebpf::load(aya::include_bytes_aligned!(concat!(
         env!("OUT_DIR"),
-        "/ebpf-monitor-ebpf"
+        "/ebpf-monitor"
     )))
     .context("Failed to load eBPF programs")?;
 

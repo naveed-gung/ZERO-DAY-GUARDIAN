@@ -12,5 +12,5 @@ aya-log-ebpf = { workspace = true }
 ebpf-monitor-common = { path = "../ebpf-monitor-common" }
 
 [[bin]]
-name = "ebpf-monitor-ebpf"
+name = "ebpf-monitor"
 path = "src/main.rs"
