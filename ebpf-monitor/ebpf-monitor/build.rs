@@ -11,6 +11,5 @@ fn main() {
         .find(|p| p.name == "ebpf-monitor-ebpf")
         .expect("ebpf-monitor-ebpf package not found in workspace");
 
-    aya_build::build_ebpf([ebpf_package.clone()])
-        .expect("Failed to build eBPF programs");
+    aya_build::build_ebpf([ebpf_package.clone()]).expect("Failed to build eBPF programs");
 }

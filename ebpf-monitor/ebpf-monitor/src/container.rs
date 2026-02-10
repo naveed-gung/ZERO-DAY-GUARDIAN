@@ -141,8 +141,7 @@ fn extract_container_id(cgroup_path: &str) -> Option<String> {
 
 /// Check if a string starts with `expected_len` hexadecimal characters.
 fn is_hex_id(s: &str, expected_len: usize) -> bool {
-    s.len() >= expected_len
-        && s[..expected_len].chars().all(|c| c.is_ascii_hexdigit())
+    s.len() >= expected_len && s[..expected_len].chars().all(|c| c.is_ascii_hexdigit())
 }
 
 #[cfg(test)]

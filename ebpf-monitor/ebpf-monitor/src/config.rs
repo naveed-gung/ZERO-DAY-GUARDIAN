@@ -11,7 +11,11 @@ use clap::Parser;
 #[command(name = "ebpf-monitor", about = "Zero-Day Guardian eBPF Node Agent")]
 pub struct Config {
     /// Path to the shared ring buffer file (tmpfs mount).
-    #[arg(long, env = "RING_BUFFER_PATH", default_value = "/shared/ringbuf/events.buf")]
+    #[arg(
+        long,
+        env = "RING_BUFFER_PATH",
+        default_value = "/shared/ringbuf/events.buf"
+    )]
     pub ring_buffer_path: String,
 
     /// Size of the ring buffer data region in MiB (must be a power of 2).

@@ -38,16 +38,20 @@ async fn main() -> Result<()> {
     config.validate()?;
 
     // Initialize logging
-    env_logger::Builder::from_env(
-        env_logger::Env::default().default_filter_or(&config.log_level),
-    )
-    .format_timestamp_millis()
-    .init();
+    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or(&config.log_level))
+        .format_timestamp_millis()
+        .init();
 
     info!("=== Zero-Day Guardian eBPF Node Agent ===");
     info!("Node: {}", config.node_name);
-    info!("Ring buffer: {} ({} MiB)", config.ring_buffer_path, config.ring_buffer_size_mb);
-    info!("XDP interface: {} (enabled: {})", config.xdp_interface, config.enable_xdp);
+    info!(
+        "Ring buffer: {} ({} MiB)",
+        config.ring_buffer_path, config.ring_buffer_size_mb
+    );
+    info!(
+        "XDP interface: {} (enabled: {})",
+        config.xdp_interface, config.enable_xdp
+    );
 
     // Initialize the shared ring buffer writer
     let ring_buf = Arc::new(Mutex::new(
@@ -71,7 +75,10 @@ async fn main() -> Result<()> {
 
     // Initialize eBPF logging (forwards aya-log-ebpf messages to the log crate)
     if let Err(e) = EbpfLogger::init(&mut ebpf) {
-        warn!("Failed to initialize eBPF logger: {}. eBPF log messages will be lost.", e);
+        warn!(
+            "Failed to initialize eBPF logger: {}. eBPF log messages will be lost.",
+            e
+        );
     }
 
     // ------------------------------------------------------------------
@@ -121,12 +128,15 @@ async fn main() -> Result<()> {
             .context("xdp_monitor program not found")?
             .try_into()?;
         program.load()?;
-        program.attach(&config.xdp_interface, XdpFlags::default())
-            .with_context(|| format!(
-                "Failed to attach XDP to interface '{}'. \
+        program
+            .attach(&config.xdp_interface, XdpFlags::default())
+            .with_context(|| {
+                format!(
+                    "Failed to attach XDP to interface '{}'. \
                  Ensure the interface exists and the program has NET_ADMIN capability.",
-                config.xdp_interface
-            ))?;
+                    config.xdp_interface
+                )
+            })?;
         info!("Attached: XDP on interface {}", config.xdp_interface);
     }
 
@@ -156,9 +166,12 @@ async fn main() -> Result<()> {
         let map_label = map_name.to_string();
 
         for cpu_id in &cpus {
-            let mut buf = perf_array
-                .open(*cpu_id, Some(256))
-                .with_context(|| format!("Failed to open perf buffer for CPU {} ({})", cpu_id, map_name))?;
+            let mut buf = perf_array.open(*cpu_id, Some(256)).with_context(|| {
+                format!(
+                    "Failed to open perf buffer for CPU {} ({})",
+                    cpu_id, map_name
+                )
+            })?;
 
             let ring_buf = ring_buf.clone();
             let resolver = resolver.clone();
@@ -187,9 +200,7 @@ async fn main() -> Result<()> {
                         }
 
                         // Re-interpret as SyscallEvent
-                        let event = unsafe {
-                            &*(buf.as_ptr() as *const SyscallEvent)
-                        };
+                        let event = unsafe { &*(buf.as_ptr() as *const SyscallEvent) };
 
                         // Validate magic
                         if !event.is_valid() {
@@ -200,10 +211,9 @@ async fn main() -> Result<()> {
                         // Enrich event with container ID if not already set
                         let mut enriched = *event;
                         if enriched.container_id[0] == 0 && enriched.cgroup_id > 1 {
-                            if let Some(container_id) = resolver.resolve(
-                                enriched.cgroup_id,
-                                enriched.pid,
-                            ) {
+                            if let Some(container_id) =
+                                resolver.resolve(enriched.cgroup_id, enriched.pid)
+                            {
                                 let id_bytes = container_id.as_bytes();
                                 let len = id_bytes.len().min(64);
                                 enriched.container_id[..len].copy_from_slice(&id_bytes[..len]);

@@ -19,9 +19,7 @@ use anyhow::{Context, Result};
 use log::{debug, error, info, warn};
 use memmap2::MmapMut;
 
-use ebpf_monitor_common::{
-    RingBufferHeader, SyscallEvent, RING_BUFFER_HEADER_SIZE, EVENT_SIZE,
-};
+use ebpf_monitor_common::{RingBufferHeader, SyscallEvent, EVENT_SIZE, RING_BUFFER_HEADER_SIZE};
 
 /// SPSC ring buffer writer backed by a memory-mapped file.
 pub struct RingBufWriter {
@@ -72,8 +70,7 @@ impl RingBufWriter {
 
         // Memory-map the file
         let mut mmap = unsafe {
-            MmapMut::map_mut(&file)
-                .with_context(|| "Failed to memory-map ring buffer file")?
+            MmapMut::map_mut(&file).with_context(|| "Failed to memory-map ring buffer file")?
         };
 
         // Initialize the header
@@ -87,11 +84,16 @@ impl RingBufWriter {
                 header.capacity = data_capacity;
                 header.flags = 0;
                 header._padding = [0u8; 32];
-                info!("Initialized ring buffer: capacity={} bytes ({} events)",
-                      data_capacity, data_capacity / EVENT_SIZE as u64);
+                info!(
+                    "Initialized ring buffer: capacity={} bytes ({} events)",
+                    data_capacity,
+                    data_capacity / EVENT_SIZE as u64
+                );
             } else {
-                info!("Reusing existing ring buffer: capacity={} bytes, write_pos={}, read_pos={}",
-                      header.capacity, header.write_pos, header.read_pos);
+                info!(
+                    "Reusing existing ring buffer: capacity={} bytes, write_pos={}, read_pos={}",
+                    header.capacity, header.write_pos, header.read_pos
+                );
             }
         }
 
@@ -144,10 +146,7 @@ impl RingBufWriter {
 
         // Write the event bytes
         let event_bytes = unsafe {
-            std::slice::from_raw_parts(
-                event as *const SyscallEvent as *const u8,
-                EVENT_SIZE,
-            )
+            std::slice::from_raw_parts(event as *const SyscallEvent as *const u8, EVENT_SIZE)
         };
 
         // Handle wraparound: if the event spans the end of the data region,
@@ -155,8 +154,7 @@ impl RingBufWriter {
         let end_offset = (write_pos & self.mask) as usize + EVENT_SIZE;
         if end_offset <= self.capacity as usize {
             // Normal case: event fits contiguously
-            self.mmap[data_offset..data_offset + EVENT_SIZE]
-                .copy_from_slice(event_bytes);
+            self.mmap[data_offset..data_offset + EVENT_SIZE].copy_from_slice(event_bytes);
         } else {
             // Wraparound: split into two copies
             let first_part = self.capacity as usize - (write_pos & self.mask) as usize;
