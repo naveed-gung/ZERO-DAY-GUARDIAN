@@ -288,8 +288,7 @@ fn try_trace_mount(ctx: &TracePointContext) -> Result<u32, i64> {
     }
 
     if !target_ptr.is_null() {
-        let _ =
-            unsafe { bpf_probe_read_user_str_bytes(target_ptr, &mut event.filename[128..256]) };
+        let _ = unsafe { bpf_probe_read_user_str_bytes(target_ptr, &mut event.filename[128..256]) };
     }
 
     // Syscall number for mount (x86_64)
