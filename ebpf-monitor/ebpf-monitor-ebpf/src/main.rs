@@ -81,11 +81,11 @@ fn fill_common_fields(
     event.event_type = event_type as u8;
     event.timestamp_ns = unsafe { bpf_ktime_get_ns() };
 
-    let pid_tgid = unsafe { bpf_get_current_pid_tgid() };
+    let pid_tgid = bpf_get_current_pid_tgid();
     event.pid = (pid_tgid >> 32) as u32;
     event.tgid = pid_tgid as u32;
 
-    let uid_gid = unsafe { bpf_get_current_uid_gid() };
+    let uid_gid = bpf_get_current_uid_gid();
     event.uid = uid_gid as u32;
     event.gid = (uid_gid >> 32) as u32;
 
@@ -280,18 +280,16 @@ fn try_trace_mount(ctx: &TracePointContext) -> Result<u32, i64> {
     let source_ptr: *const u8 = unsafe { ctx.read_at::<u64>(16)? as *const u8 };
     let target_ptr: *const u8 = unsafe { ctx.read_at::<u64>(24)? as *const u8 };
 
-    // Read source path into first 128 bytes of filename
+    // Read source and target directly into event.filename to stay within
+    // the 512-byte BPF stack limit (SyscallEvent alone is 384 bytes;
+    // intermediate buffers would push us over).
     if !source_ptr.is_null() {
-        let mut source_buf = [0u8; 128];
-        let _ = unsafe { bpf_probe_read_user_str_bytes(source_ptr, &mut source_buf) };
-        event.filename[..128].copy_from_slice(&source_buf);
+        let _ = unsafe { bpf_probe_read_user_str_bytes(source_ptr, &mut event.filename[..128]) };
     }
 
-    // Read target path into bytes 128..256 of filename
     if !target_ptr.is_null() {
-        let mut target_buf = [0u8; 128];
-        let _ = unsafe { bpf_probe_read_user_str_bytes(target_ptr, &mut target_buf) };
-        event.filename[128..256].copy_from_slice(&target_buf);
+        let _ =
+            unsafe { bpf_probe_read_user_str_bytes(target_ptr, &mut event.filename[128..256]) };
     }
 
     // Syscall number for mount (x86_64)
