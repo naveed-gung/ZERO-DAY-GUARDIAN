@@ -1,0 +1,208 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: guardianpolicies.guardian.zerodayguardian.io
+  labels:
+    app.kubernetes.io/name: zero-day-guardian
+    app.kubernetes.io/component: operator
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.15.0
+spec:
+  group: guardian.zerodayguardian.io
+  names:
+    kind: GuardianPolicy
+    listKind: GuardianPolicyList
+    plural: guardianpolicies
+    singular: guardianpolicy
+    shortNames:
+      - gp
+  scope: Namespaced
+  versions:
+    - name: v1alpha1
+      served: true
+      storage: true
+      additionalPrinterColumns:
+        - name: Phase
+          type: string
+          jsonPath: .status.phase
+        - name: Nodes
+          type: integer
+          jsonPath: .status.monitoredNodes
+        - name: Detections
+          type: integer
+          jsonPath: .status.totalDetections
+        - name: Age
+          type: date
+          jsonPath: .metadata.creationTimestamp
+      subresources:
+        status: {}
+      schema:
+        openAPIV3Schema:
+          type: object
+          description: GuardianPolicy defines the desired state of a Zero-Day Guardian deployment.
+          properties:
+            apiVersion:
+              type: string
+            kind:
+              type: string
+            metadata:
+              type: object
+            spec:
+              type: object
+              description: GuardianPolicySpec defines the desired monitoring and response configuration.
+              properties:
+                nodeSelector:
+                  type: object
+                  additionalProperties:
+                    type: string
+                  description: Node selector for DaemonSet scheduling.
+                detection:
+                  type: object
+                  description: Detection engine configuration.
+                  properties:
+                    enabled:
+                      type: boolean
+                      default: true
+                      description: Toggles the detection engine.
+                    severityThreshold:
+                      type: string
+                      enum: ["CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO"]
+                      default: "HIGH"
+                      description: Minimum severity for automated actions.
+                    enabledDetectors:
+                      type: array
+                      items:
+                        type: string
+                      default: ["container-escape", "cryptojacking", "lateral-movement", "sequence-analysis"]
+                      description: Which detectors to activate.
+                  required: ["enabled"]
+                response:
+                  type: object
+                  description: Automated response configuration.
+                  properties:
+                    dryRun:
+                      type: boolean
+                      default: true
+                      description: Log actions without executing them.
+                    rateLimitPerMinute:
+                      type: integer
+                      default: 10
+                      minimum: 1
+                      maximum: 100
+                      description: Maximum automated actions per minute.
+                    approvedNamespaces:
+                      type: array
+                      items:
+                        type: string
+                      description: Namespaces allowed to receive automated actions. Empty means all non-excluded.
+                    excludedNamespaces:
+                      type: array
+                      items:
+                        type: string
+                      description: Namespaces protected from automated actions (kube-system always excluded).
+                  required: ["dryRun"]
+                threatIntel:
+                  type: object
+                  description: Threat intelligence provider configuration.
+                  properties:
+                    virusTotalSecretRef:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        key:
+                          type: string
+                      required: ["name", "key"]
+                    abuseIPDBSecretRef:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        key:
+                          type: string
+                      required: ["name", "key"]
+                    otxSecretRef:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        key:
+                          type: string
+                      required: ["name", "key"]
+                siem:
+                  type: object
+                  description: SIEM forwarding configuration.
+                  properties:
+                    splunk:
+                      type: object
+                      description: Splunk HEC configuration.
+                      properties:
+                        enabled:
+                          type: boolean
+                        hecUrl:
+                          type: string
+                        tokenRef:
+                          type: object
+                          properties:
+                            name:
+                              type: string
+                            key:
+                              type: string
+                          required: ["name", "key"]
+                        index:
+                          type: string
+                      required: ["enabled", "hecUrl", "tokenRef"]
+                    elastic:
+                      type: object
+                      description: Elasticsearch configuration.
+                      properties:
+                        enabled:
+                          type: boolean
+                        url:
+                          type: string
+                        apiKeyRef:
+                          type: object
+                          properties:
+                            name:
+                              type: string
+                            key:
+                              type: string
+                          required: ["name", "key"]
+                        index:
+                          type: string
+                      required: ["enabled", "url", "apiKeyRef"]
+              required: ["detection", "response"]
+            status:
+              type: object
+              description: GuardianPolicyStatus defines the observed state of GuardianPolicy.
+              properties:
+                phase:
+                  type: string
+                  enum: ["Pending", "Running", "Degraded", "Error"]
+                monitoredNodes:
+                  type: integer
+                totalDetections:
+                  type: integer
+                totalActions:
+                  type: integer
+                lastDetectionTime:
+                  type: string
+                  format: date-time
+                conditions:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                      status:
+                        type: string
+                        enum: ["True", "False", "Unknown"]
+                      lastTransitionTime:
+                        type: string
+                        format: date-time
+                      reason:
+                        type: string
+                      message:
+                        type: string
+                    required: ["type", "status"]

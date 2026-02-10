@@ -1,0 +1,22 @@
+[workspace]
+resolver = "2"
+members = [
+    "ebpf-monitor",
+    "ebpf-monitor-common",
+    "ebpf-monitor-ebpf",
+]
+default-members = ["ebpf-monitor", "ebpf-monitor-common"]
+
+[workspace.dependencies]
+aya = { version = "0.13", features = ["async_tokio"] }
+aya-build = { version = "0.1" }
+aya-ebpf = { version = "0.1" }
+aya-log = { version = "0.2" }
+aya-log-ebpf = { version = "0.1" }
+anyhow = "1"
+clap = { version = "4", features = ["derive"] }
+env_logger = "0.11"
+libc = "0.2"
+log = "0.4"
+memmap2 = "0.9"
+tokio = { version = "1", features = ["full"] }

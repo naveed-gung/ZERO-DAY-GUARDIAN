@@ -1,0 +1,51 @@
+# Example GuardianPolicy custom resource
+apiVersion: guardian.zerodayguardian.io/v1alpha1
+kind: GuardianPolicy
+metadata:
+  name: default-policy
+  namespace: guardian-system
+spec:
+  nodeSelector:
+    kubernetes.io/os: linux
+  detection:
+    enabled: true
+    severityThreshold: HIGH
+    enabledDetectors:
+      - container-escape
+      - cryptojacking
+      - lateral-movement
+      - sequence-analysis
+  response:
+    dryRun: false
+    rateLimitPerMinute: 10
+    approvedNamespaces: []
+    excludedNamespaces:
+      - kube-system
+      - kube-public
+      - kube-node-lease
+      - guardian-system
+  threatIntel:
+    virusTotalSecretRef:
+      name: guardian-secrets
+      key: virustotal-api-key
+    abuseIPDBSecretRef:
+      name: guardian-secrets
+      key: abuseipdb-api-key
+    otxSecretRef:
+      name: guardian-secrets
+      key: otx-api-key
+  siem:
+    splunk:
+      enabled: true
+      hecUrl: "https://splunk.example.com:8088/services/collector"
+      tokenRef:
+        name: guardian-secrets
+        key: splunk-hec-token
+      index: "guardian-events"
+    elastic:
+      enabled: true
+      url: "https://elasticsearch.example.com:9200"
+      apiKeyRef:
+        name: guardian-secrets
+        key: elastic-api-key
+      index: "guardian-events"

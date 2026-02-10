@@ -1,0 +1,31 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: guardian-monitor
+  labels:
+    app.kubernetes.io/name: zero-day-guardian
+    app.kubernetes.io/component: monitor
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: guardian-monitor
+subjects:
+  - kind: ServiceAccount
+    name: guardian-monitor
+    namespace: guardian-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: guardian-operator
+  labels:
+    app.kubernetes.io/name: zero-day-guardian
+    app.kubernetes.io/component: operator
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: guardian-operator
+subjects:
+  - kind: ServiceAccount
+    name: guardian-operator
+    namespace: guardian-system

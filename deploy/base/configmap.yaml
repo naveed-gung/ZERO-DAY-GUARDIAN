@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: guardian-config
+  namespace: guardian-system
+  labels:
+    app.kubernetes.io/name: zero-day-guardian
+    app.kubernetes.io/component: config
+data:
+  # Ring buffer settings
+  GUARDIAN_RINGBUFFER_PATH: "/var/guardian/ringbuf/events.buf"
+  GUARDIAN_RINGBUFFER_SIZE: "16777216"
+  GUARDIAN_RINGBUFFER_POLL_INTERVAL_MS: "50"
+
+  # Detection toggles
+  GUARDIAN_DETECTION_CONTAINER_ESCAPE: "true"
+  GUARDIAN_DETECTION_CRYPTOJACKING: "true"
+  GUARDIAN_DETECTION_LATERAL_MOVEMENT: "true"
+  GUARDIAN_DETECTION_SEQUENCE_ANALYSIS: "true"
+
+  # Response settings
+  GUARDIAN_ACTION_DRY_RUN: "false"
+  GUARDIAN_ACTION_RATE_LIMIT_PER_MINUTE: "10"
+  GUARDIAN_ACTION_EXCLUDED_NAMESPACES: "kube-system,kube-public,kube-node-lease"
+  GUARDIAN_ACTION_MIN_SEVERITY_FOR_AUTO_ACTION: "HIGH"
+
+  # Alert settings
+  GUARDIAN_ALERT_ENABLED: "true"
+
+  # Forensics
+  GUARDIAN_FORENSICS_EVIDENCE_DIR: "/var/guardian/evidence"
+  GUARDIAN_FORENSICS_RETENTION_DAYS: "30"
+
+  # Metrics
+  GUARDIAN_METRICS_PORT: "8081"
+  GUARDIAN_METRICS_PATH: "/actuator/prometheus"

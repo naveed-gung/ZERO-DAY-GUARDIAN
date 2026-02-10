@@ -1,0 +1,116 @@
+# ===========================================================================
+# Zero-Day Guardian -- Java Detection Engine
+#
+# Spring Boot / Java 21 application configuration.
+# All sensitive values are injected via environment variables.
+#
+# Author: Naveed Gung
+# ===========================================================================
+
+server:
+  port: 8080
+
+management:
+  server:
+    port: 8081
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  metrics:
+    tags:
+      application: zero-day-guardian
+
+spring:
+  application:
+    name: zero-day-guardian-detector
+
+# ---------------------------------------------------------------------------
+# Ring Buffer Configuration
+# ---------------------------------------------------------------------------
+guardian:
+  ringbuffer:
+    path: ${RING_BUFFER_PATH:/shared/ringbuf/events.buf}
+    poll-interval-ms: ${RING_BUFFER_POLL_INTERVAL_MS:1}
+    size-mb: ${RING_BUFFER_SIZE_MB:16}
+
+  # ---------------------------------------------------------------------------
+  # Detection Configuration
+  # ---------------------------------------------------------------------------
+  detection:
+    threat-score-threshold: ${THREAT_SCORE_THRESHOLD:75}
+    syscall-window-size: ${SYSCALL_WINDOW_SIZE:100}
+    syscall-window-duration-ms: ${SYSCALL_WINDOW_DURATION_MS:30000}
+
+  # ---------------------------------------------------------------------------
+  # Defensive Action Configuration
+  # ---------------------------------------------------------------------------
+  action:
+    approved-namespaces: ${APPROVED_NAMESPACES:default}
+    excluded-namespaces: ${EXCLUDED_NAMESPACES:kube-system,kube-public,kube-node-lease}
+    rate-limit-per-minute: ${RATE_LIMIT_PER_MINUTE:5}
+    dry-run: ${ACTION_DRY_RUN:false}
+
+  # ---------------------------------------------------------------------------
+  # Threat Intelligence API Configuration
+  # ---------------------------------------------------------------------------
+  threat-intel:
+    virustotal:
+      api-key: ${VIRUSTOTAL_API_KEY:}
+      base-url: https://www.virustotal.com/api/v3
+      rate-limit-per-minute: 4
+      timeout-ms: 10000
+
+    abuseipdb:
+      api-key: ${ABUSEIPDB_API_KEY:}
+      base-url: https://api.abuseipdb.com/api/v2
+      rate-limit-per-minute: 60
+      timeout-ms: 5000
+
+    alientvault-otx:
+      api-key: ${OTX_API_KEY:}
+      base-url: https://otx.alienvault.com/api/v1
+      rate-limit-per-minute: 100
+      timeout-ms: 10000
+
+  # ---------------------------------------------------------------------------
+  # SIEM Integration Configuration
+  # ---------------------------------------------------------------------------
+  siem:
+    splunk:
+      enabled: ${SPLUNK_ENABLED:false}
+      hec-url: ${SPLUNK_HEC_URL:}
+      hec-token: ${SPLUNK_HEC_TOKEN:}
+      index: ${SPLUNK_INDEX:zero-day-guardian}
+      timeout-ms: 5000
+
+    elastic:
+      enabled: ${ELASTIC_ENABLED:false}
+      hosts: ${ELASTIC_HOSTS:}
+      username: ${ELASTIC_USERNAME:elastic}
+      password: ${ELASTIC_PASSWORD:}
+      index-prefix: zerodayguardian-alerts
+
+  # ---------------------------------------------------------------------------
+  # Forensic Evidence Configuration
+  # ---------------------------------------------------------------------------
+  forensic:
+    storage-path: ${FORENSIC_STORAGE_PATH:/data/forensic}
+    max-evidence-size-mb: ${MAX_EVIDENCE_SIZE_MB:100}
+    retention-days: ${FORENSIC_RETENTION_DAYS:90}
+
+  # ---------------------------------------------------------------------------
+  # Node Information (injected by Kubernetes downward API)
+  # ---------------------------------------------------------------------------
+  node:
+    name: ${NODE_NAME:unknown}
+    pod-name: ${POD_NAME:unknown}
+    namespace: ${POD_NAMESPACE:zero-day-guardian}
+
+logging:
+  level:
+    root: ${LOG_LEVEL:INFO}
+    com.zerodayguardian: ${GUARDIAN_LOG_LEVEL:INFO}
+    io.kubernetes.client: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"

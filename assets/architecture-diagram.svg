@@ -1,0 +1,264 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 700" width="1200" height="700">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0A0E17;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#121929;stop-opacity:1"/>
+    </linearGradient>
+    <linearGradient id="rustGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#CE422B;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#A3341F;stop-opacity:1"/>
+    </linearGradient>
+    <linearGradient id="javaGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#ED8B00;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#D47800;stop-opacity:1"/>
+    </linearGradient>
+    <linearGradient id="goGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#00ADD8;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#0090B8;stop-opacity:1"/>
+    </linearGradient>
+    <linearGradient id="k8sGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#326CE5;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#2857C0;stop-opacity:1"/>
+    </linearGradient>
+    <linearGradient id="threatGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#FF4444;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#CC0000;stop-opacity:1"/>
+    </linearGradient>
+    <linearGradient id="flowLine" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#00D2FF;stop-opacity:0.2"/>
+      <stop offset="50%" style="stop-color:#00D2FF;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#00D2FF;stop-opacity:0.2"/>
+    </linearGradient>
+    <filter id="boxShadow">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#000" flood-opacity="0.4"/>
+    </filter>
+    <filter id="glowCyan">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <marker id="arrowHead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#00D2FF"/>
+    </marker>
+    <marker id="arrowHeadRed" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#FF4444"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="700" fill="url(#bgGrad)"/>
+
+  <!-- Grid pattern -->
+  <g opacity="0.05">
+    <line x1="0" y1="0" x2="0" y2="700" stroke="#00D2FF" stroke-width="0.5"/>
+    <line x1="100" y1="0" x2="100" y2="700" stroke="#00D2FF" stroke-width="0.5"/>
+    <line x1="200" y1="0" x2="200" y2="700" stroke="#00D2FF" stroke-width="0.5"/>
+    <line x1="300" y1="0" x2="300" y2="700" stroke="#00D2FF" stroke-width="0.5"/>
+    <line x1="400" y1="0" x2="400" y2="700" stroke="#00D2FF" stroke-width="0.5"/>
+    <line x1="500" y1="0" x2="500" y2="700" stroke="#00D2FF" stroke-width="0.5"/>
+    <line x1="600" y1="0" x2="600" y2="700" stroke="#00D2FF" stroke-width="0.5"/>
+    <line x1="700" y1="0" x2="700" y2="700" stroke="#00D2FF" stroke-width="0.5"/>
+    <line x1="800" y1="0" x2="800" y2="700" stroke="#00D2FF" stroke-width="0.5"/>
+    <line x1="900" y1="0" x2="900" y2="700" stroke="#00D2FF" stroke-width="0.5"/>
+    <line x1="1000" y1="0" x2="1000" y2="700" stroke="#00D2FF" stroke-width="0.5"/>
+    <line x1="1100" y1="0" x2="1100" y2="700" stroke="#00D2FF" stroke-width="0.5"/>
+    <line x1="0" y1="100" x2="1200" y2="100" stroke="#00D2FF" stroke-width="0.5"/>
+    <line x1="0" y1="200" x2="1200" y2="200" stroke="#00D2FF" stroke-width="0.5"/>
+    <line x1="0" y1="300" x2="1200" y2="300" stroke="#00D2FF" stroke-width="0.5"/>
+    <line x1="0" y1="400" x2="1200" y2="400" stroke="#00D2FF" stroke-width="0.5"/>
+    <line x1="0" y1="500" x2="1200" y2="500" stroke="#00D2FF" stroke-width="0.5"/>
+    <line x1="0" y1="600" x2="1200" y2="600" stroke="#00D2FF" stroke-width="0.5"/>
+  </g>
+
+  <!-- Title -->
+  <text x="600" y="45" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="22" font-weight="700" fill="#FFFFFF" letter-spacing="3">ZERO-DAY GUARDIAN</text>
+  <text x="600" y="65" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="#00D2FF" letter-spacing="5">SYSTEM ARCHITECTURE</text>
+  <line x1="400" y1="75" x2="800" y2="75" stroke="#1a3a4a" stroke-width="1"/>
+
+  <!-- ========== LAYER 1: Kubernetes Cluster (outer box) ========== -->
+  <rect x="40" y="90" width="1120" height="560" rx="8" fill="none" stroke="#326CE5" stroke-width="1.5" stroke-dasharray="8,4" opacity="0.5"/>
+  <rect x="40" y="90" width="200" height="24" rx="4" fill="#326CE5" opacity="0.15"/>
+  <text x="52" y="106" font-family="'Segoe UI', Arial, sans-serif" font-size="11" font-weight="600" fill="#326CE5">KUBERNETES CLUSTER</text>
+
+  <!-- ========== NODE (left section) ========== -->
+  <rect x="60" y="130" width="450" height="500" rx="6" fill="#0D1320" stroke="#1a3a4a" stroke-width="1" filter="url(#boxShadow)"/>
+  <rect x="60" y="130" width="450" height="28" rx="6" fill="#151D2E"/>
+  <text x="76" y="149" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="600" fill="#8892A4">WORKER NODE (DaemonSet Pod)</text>
+
+  <!-- Rust eBPF Monitor -->
+  <rect x="80" y="175" width="200" height="200" rx="5" fill="#151D2E" stroke="#CE422B" stroke-width="1.5"/>
+  <rect x="80" y="175" width="200" height="26" rx="5" fill="url(#rustGrad)" opacity="0.9"/>
+  <text x="115" y="192" font-family="'Segoe UI', Arial, sans-serif" font-size="11" font-weight="700" fill="#FFFFFF">RUST eBPF MONITOR</text>
+
+  <text x="95" y="220" font-family="'Courier New', monospace" font-size="9" fill="#8892A4">tracepoint/sys_enter_execve</text>
+  <text x="95" y="234" font-family="'Courier New', monospace" font-size="9" fill="#8892A4">tracepoint/sys_enter_unshare</text>
+  <text x="95" y="248" font-family="'Courier New', monospace" font-size="9" fill="#8892A4">tracepoint/sys_enter_mount</text>
+  <text x="95" y="262" font-family="'Courier New', monospace" font-size="9" fill="#8892A4">tracepoint/sys_enter_ptrace</text>
+  <text x="95" y="276" font-family="'Courier New', monospace" font-size="9" fill="#8892A4">xdp/network_monitor</text>
+
+  <rect x="95" y="290" width="170" height="22" rx="3" fill="#1a1a2e" stroke="#CE422B" stroke-width="0.5"/>
+  <text x="115" y="305" font-family="'Courier New', monospace" font-size="9" fill="#CE422B">PerfEventArray output</text>
+
+  <rect x="95" y="320" width="170" height="38" rx="3" fill="#1a1a2e" stroke="#CE422B" stroke-width="0.5"/>
+  <text x="115" y="336" font-family="'Courier New', monospace" font-size="9" fill="#CE422B">Userspace Loader</text>
+  <text x="115" y="350" font-family="'Courier New', monospace" font-size="8" fill="#6a6a8a">aya-rs / tokio runtime</text>
+
+  <!-- Shared Ring Buffer -->
+  <rect x="80" y="390" width="200" height="55" rx="5" fill="#0f1a2a" stroke="#00D2FF" stroke-width="1.5" stroke-dasharray="4,2"/>
+  <text x="105" y="411" font-family="'Segoe UI', Arial, sans-serif" font-size="10" font-weight="600" fill="#00D2FF">SHARED RING BUFFER</text>
+  <text x="95" y="428" font-family="'Courier New', monospace" font-size="8" fill="#5a6a8a">emptyDir (medium: Memory)</text>
+  <text x="95" y="440" font-family="'Courier New', monospace" font-size="8" fill="#5a6a8a">SPSC / mmap / 16 MiB tmpfs</text>
+
+  <!-- Arrow from eBPF to ring buffer -->
+  <line x1="180" y1="365" x2="180" y2="388" stroke="#00D2FF" stroke-width="1.5" marker-end="url(#arrowHead)"/>
+
+  <!-- Java Detection Engine -->
+  <rect x="300" y="175" width="195" height="440" rx="5" fill="#151D2E" stroke="#ED8B00" stroke-width="1.5"/>
+  <rect x="300" y="175" width="195" height="26" rx="5" fill="url(#javaGrad)" opacity="0.9"/>
+  <text x="318" y="192" font-family="'Segoe UI', Arial, sans-serif" font-size="11" font-weight="700" fill="#FFFFFF">JAVA DETECTION ENGINE</text>
+
+  <!-- Sub-modules -->
+  <rect x="312" y="212" width="170" height="24" rx="3" fill="#1a1a2e" stroke="#ED8B00" stroke-width="0.5"/>
+  <text x="325" y="228" font-family="'Courier New', monospace" font-size="9" fill="#ED8B00">RingBufferReader</text>
+
+  <rect x="312" y="244" width="170" height="24" rx="3" fill="#1a1a2e" stroke="#ED8B00" stroke-width="0.5"/>
+  <text x="325" y="260" font-family="'Courier New', monospace" font-size="9" fill="#ED8B00">SyscallSequenceAnalyzer</text>
+
+  <rect x="312" y="276" width="170" height="24" rx="3" fill="#1a1a2e" stroke="#ED8B00" stroke-width="0.5"/>
+  <text x="325" y="292" font-family="'Courier New', monospace" font-size="9" fill="#ED8B00">ContainerEscapeDetector</text>
+
+  <rect x="312" y="308" width="170" height="24" rx="3" fill="#1a1a2e" stroke="#ED8B00" stroke-width="0.5"/>
+  <text x="325" y="324" font-family="'Courier New', monospace" font-size="9" fill="#ED8B00">CryptojackingDetector</text>
+
+  <rect x="312" y="340" width="170" height="24" rx="3" fill="#1a1a2e" stroke="#ED8B00" stroke-width="0.5"/>
+  <text x="325" y="356" font-family="'Courier New', monospace" font-size="9" fill="#ED8B00">LateralMovementDetector</text>
+
+  <rect x="312" y="372" width="170" height="24" rx="3" fill="#1a1a2e" stroke="#ED8B00" stroke-width="0.5"/>
+  <text x="325" y="388" font-family="'Courier New', monospace" font-size="9" fill="#ED8B00">ThreatIntelService</text>
+
+  <rect x="312" y="404" width="170" height="24" rx="3" fill="#1a1a2e" stroke="#FF4444" stroke-width="0.5"/>
+  <text x="325" y="420" font-family="'Courier New', monospace" font-size="9" fill="#FF4444">SafeActionExecutor</text>
+
+  <rect x="312" y="436" width="170" height="24" rx="3" fill="#1a1a2e" stroke="#ED8B00" stroke-width="0.5"/>
+  <text x="325" y="452" font-family="'Courier New', monospace" font-size="9" fill="#ED8B00">PodIsolator</text>
+
+  <rect x="312" y="468" width="170" height="24" rx="3" fill="#1a1a2e" stroke="#ED8B00" stroke-width="0.5"/>
+  <text x="325" y="484" font-family="'Courier New', monospace" font-size="9" fill="#ED8B00">EvidenceCollector</text>
+
+  <rect x="312" y="500" width="170" height="24" rx="3" fill="#1a1a2e" stroke="#ED8B00" stroke-width="0.5"/>
+  <text x="325" y="516" font-family="'Courier New', monospace" font-size="9" fill="#ED8B00">AlertService</text>
+
+  <rect x="312" y="540" width="170" height="30" rx="3" fill="#1a1a2e" stroke="#ED8B00" stroke-width="0.5"/>
+  <text x="325" y="556" font-family="'Courier New', monospace" font-size="8" fill="#6a6a8a">Spring Boot 3.3 / Java 21</text>
+  <text x="325" y="566" font-family="'Courier New', monospace" font-size="8" fill="#6a6a8a">Micrometer / Actuator</text>
+
+  <!-- Arrow from ring buffer to Java -->
+  <line x1="282" y1="417" x2="310" y2="224" stroke="#00D2FF" stroke-width="1.5" marker-end="url(#arrowHead)"/>
+
+  <!-- ========== CONTROL PLANE (right section) ========== -->
+  <rect x="540" y="130" width="300" height="260" rx="6" fill="#0D1320" stroke="#1a3a4a" stroke-width="1" filter="url(#boxShadow)"/>
+  <rect x="540" y="130" width="300" height="28" rx="6" fill="#151D2E"/>
+  <text x="556" y="149" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="600" fill="#8892A4">CONTROL PLANE</text>
+
+  <!-- Go Operator -->
+  <rect x="558" y="172" width="265" height="200" rx="5" fill="#151D2E" stroke="#00ADD8" stroke-width="1.5"/>
+  <rect x="558" y="172" width="265" height="26" rx="5" fill="url(#goGrad)" opacity="0.9"/>
+  <text x="580" y="189" font-family="'Segoe UI', Arial, sans-serif" font-size="11" font-weight="700" fill="#FFFFFF">GO KUBERNETES OPERATOR</text>
+
+  <rect x="572" y="210" width="235" height="24" rx="3" fill="#1a1a2e" stroke="#00ADD8" stroke-width="0.5"/>
+  <text x="585" y="226" font-family="'Courier New', monospace" font-size="9" fill="#00ADD8">GuardianPolicy CRD Controller</text>
+
+  <rect x="572" y="242" width="235" height="24" rx="3" fill="#1a1a2e" stroke="#00ADD8" stroke-width="0.5"/>
+  <text x="585" y="258" font-family="'Courier New', monospace" font-size="9" fill="#00ADD8">DaemonSet Manager</text>
+
+  <rect x="572" y="274" width="235" height="24" rx="3" fill="#1a1a2e" stroke="#00ADD8" stroke-width="0.5"/>
+  <text x="585" y="290" font-family="'Courier New', monospace" font-size="9" fill="#00ADD8">AuditLog Processor</text>
+
+  <rect x="572" y="306" width="235" height="24" rx="3" fill="#1a1a2e" stroke="#00ADD8" stroke-width="0.5"/>
+  <text x="585" y="322" font-family="'Courier New', monospace" font-size="9" fill="#00ADD8">Isolation Handler</text>
+
+  <rect x="572" y="340" width="235" height="22" rx="3" fill="#1a1a2e" stroke="#00ADD8" stroke-width="0.5"/>
+  <text x="585" y="355" font-family="'Courier New', monospace" font-size="8" fill="#6a6a8a">controller-runtime / Kubebuilder</text>
+
+  <!-- Kubernetes API Server -->
+  <rect x="540" y="410" width="300" height="70" rx="6" fill="#0D1320" stroke="#326CE5" stroke-width="1.5" filter="url(#boxShadow)"/>
+  <rect x="540" y="410" width="300" height="26" rx="6" fill="url(#k8sGrad)" opacity="0.8"/>
+  <text x="610" y="427" font-family="'Segoe UI', Arial, sans-serif" font-size="11" font-weight="700" fill="#FFFFFF">KUBERNETES API SERVER</text>
+  <text x="560" y="455" font-family="'Courier New', monospace" font-size="9" fill="#8892A4">Pods / NetworkPolicies / RBAC / Audit Logs</text>
+  <text x="560" y="468" font-family="'Courier New', monospace" font-size="9" fill="#8892A4">Secrets / ConfigMaps / ServiceAccounts</text>
+
+  <!-- Arrows: Operator <-> K8s API -->
+  <line x1="690" y1="372" x2="690" y2="408" stroke="#326CE5" stroke-width="1.5" marker-end="url(#arrowHead)"/>
+  <line x1="670" y1="408" x2="670" y2="372" stroke="#326CE5" stroke-width="1.5" marker-end="url(#arrowHead)"/>
+
+  <!-- Arrow: Java -> K8s API -->
+  <line x1="497" y1="450" x2="538" y2="445" stroke="#ED8B00" stroke-width="1.2" marker-end="url(#arrowHead)" stroke-dasharray="4,2"/>
+
+  <!-- ========== EXTERNAL SERVICES (far right) ========== -->
+  <rect x="870" y="130" width="270" height="350" rx="6" fill="#0D1320" stroke="#1a3a4a" stroke-width="1" filter="url(#boxShadow)"/>
+  <rect x="870" y="130" width="270" height="28" rx="6" fill="#151D2E"/>
+  <text x="886" y="149" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="600" fill="#8892A4">EXTERNAL INTEGRATIONS</text>
+
+  <!-- Threat Intel -->
+  <rect x="888" y="170" width="235" height="100" rx="4" fill="#1a1a2e" stroke="#FF4444" stroke-width="1"/>
+  <text x="903" y="188" font-family="'Segoe UI', Arial, sans-serif" font-size="10" font-weight="600" fill="#FF4444">Threat Intelligence APIs</text>
+  <text x="903" y="208" font-family="'Courier New', monospace" font-size="9" fill="#8892A4">VirusTotal    (hash/domain/IP)</text>
+  <text x="903" y="222" font-family="'Courier New', monospace" font-size="9" fill="#8892A4">AbuseIPDB     (IP reputation)</text>
+  <text x="903" y="236" font-family="'Courier New', monospace" font-size="9" fill="#8892A4">AlienVault OTX(pulse/indicator)</text>
+  <text x="903" y="258" font-family="'Courier New', monospace" font-size="8" fill="#5a6a8a">WebClient / rate-limited / async</text>
+
+  <!-- SIEM -->
+  <rect x="888" y="282" width="235" height="70" rx="4" fill="#1a1a2e" stroke="#9B59B6" stroke-width="1"/>
+  <text x="903" y="300" font-family="'Segoe UI', Arial, sans-serif" font-size="10" font-weight="600" fill="#9B59B6">SIEM Integration</text>
+  <text x="903" y="318" font-family="'Courier New', monospace" font-size="9" fill="#8892A4">Splunk  (HEC endpoint)</text>
+  <text x="903" y="332" font-family="'Courier New', monospace" font-size="9" fill="#8892A4">Elastic (bulk API index)</text>
+
+  <!-- Container Registries -->
+  <rect x="888" y="364" width="235" height="55" rx="4" fill="#1a1a2e" stroke="#2ECC71" stroke-width="1"/>
+  <text x="903" y="382" font-family="'Segoe UI', Arial, sans-serif" font-size="10" font-weight="600" fill="#2ECC71">Container Registries</text>
+  <text x="903" y="400" font-family="'Courier New', monospace" font-size="9" fill="#8892A4">Docker Hub / GHCR (vuln scan)</text>
+
+  <!-- Arrow: Java -> Threat Intel -->
+  <line x1="497" y1="384" x2="886" y2="220" stroke="#FF4444" stroke-width="1.2" marker-end="url(#arrowHeadRed)" stroke-dasharray="4,2"/>
+
+  <!-- Arrow: Java -> SIEM -->
+  <line x1="497" y1="528" x2="886" y2="315" stroke="#9B59B6" stroke-width="1.2" marker-end="url(#arrowHead)" stroke-dasharray="4,2" opacity="0.7"/>
+
+  <!-- ========== LINUX KERNEL (bottom) ========== -->
+  <rect x="60" y="460" width="200" height="80" rx="5" fill="#0D1320" stroke="#CE422B" stroke-width="1" stroke-dasharray="4,2"/>
+  <text x="100" y="480" font-family="'Segoe UI', Arial, sans-serif" font-size="10" font-weight="600" fill="#CE422B">LINUX KERNEL</text>
+  <text x="78" y="498" font-family="'Courier New', monospace" font-size="8" fill="#5a6a8a">syscall tracepoints</text>
+  <text x="78" y="510" font-family="'Courier New', monospace" font-size="8" fill="#5a6a8a">XDP hooks / cgroup tracking</text>
+  <text x="78" y="522" font-family="'Courier New', monospace" font-size="8" fill="#5a6a8a">perf event subsystem</text>
+
+  <!-- Arrow: Kernel -> eBPF -->
+  <line x1="160" y1="458" x2="160" y2="380" stroke="#CE422B" stroke-width="1.5" marker-end="url(#arrowHead)" stroke-dasharray="3,2"/>
+
+  <!-- ========== METRICS (bottom right) ========== -->
+  <rect x="540" y="500" width="300" height="120" rx="6" fill="#0D1320" stroke="#F39C12" stroke-width="1" filter="url(#boxShadow)"/>
+  <rect x="540" y="500" width="300" height="26" rx="6" fill="#151D2E"/>
+  <text x="556" y="517" font-family="'Segoe UI', Arial, sans-serif" font-size="11" font-weight="600" fill="#F39C12">OBSERVABILITY</text>
+
+  <text x="560" y="545" font-family="'Courier New', monospace" font-size="9" fill="#8892A4">guardian.events.processed    (counter)</text>
+  <text x="560" y="559" font-family="'Courier New', monospace" font-size="9" fill="#8892A4">guardian.threats.detected     (counter)</text>
+  <text x="560" y="573" font-family="'Courier New', monospace" font-size="9" fill="#8892A4">guardian.detection.latency    (timer)</text>
+  <text x="560" y="587" font-family="'Courier New', monospace" font-size="9" fill="#8892A4">guardian.actions.taken        (counter)</text>
+  <text x="560" y="607" font-family="'Courier New', monospace" font-size="8" fill="#5a6a8a">Prometheus / Micrometer / Actuator :8081</text>
+
+  <!-- Legend -->
+  <rect x="870" y="500" width="270" height="120" rx="6" fill="#0D1320" stroke="#1a3a4a" stroke-width="1"/>
+  <text x="886" y="520" font-family="'Segoe UI', Arial, sans-serif" font-size="11" font-weight="600" fill="#8892A4">LEGEND</text>
+  <line x1="886" y1="536" x2="916" y2="536" stroke="#CE422B" stroke-width="2"/>
+  <text x="924" y="540" font-family="'Segoe UI', Arial, sans-serif" font-size="9" fill="#8892A4">Rust / eBPF</text>
+  <line x1="886" y1="554" x2="916" y2="554" stroke="#ED8B00" stroke-width="2"/>
+  <text x="924" y="558" font-family="'Segoe UI', Arial, sans-serif" font-size="9" fill="#8892A4">Java / Spring Boot</text>
+  <line x1="886" y1="572" x2="916" y2="572" stroke="#00ADD8" stroke-width="2"/>
+  <text x="924" y="576" font-family="'Segoe UI', Arial, sans-serif" font-size="9" fill="#8892A4">Go / Kubebuilder</text>
+  <line x1="886" y1="590" x2="916" y2="590" stroke="#326CE5" stroke-width="2"/>
+  <text x="924" y="594" font-family="'Segoe UI', Arial, sans-serif" font-size="9" fill="#8892A4">Kubernetes</text>
+  <line x1="886" y1="608" x2="916" y2="608" stroke="#00D2FF" stroke-width="2" stroke-dasharray="4,2"/>
+  <text x="924" y="612" font-family="'Segoe UI', Arial, sans-serif" font-size="9" fill="#8892A4">Data Flow</text>
+
+  <!-- Footer -->
+  <text x="600" y="680" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="9" fill="#3a4a5a">github.com/naveed-gung/zero-day-guardian</text>
+</svg>

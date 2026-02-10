@@ -1,0 +1,70 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../base
+
+namespace: guardian-system
+
+patches:
+  # Production overlay: full resources, strict settings
+  - target:
+      kind: ConfigMap
+      name: guardian-config
+    patch: |
+      - op: replace
+        path: /data/GUARDIAN_ACTION_DRY_RUN
+        value: "false"
+      - op: replace
+        path: /data/GUARDIAN_ACTION_RATE_LIMIT_PER_MINUTE
+        value: "5"
+      - op: replace
+        path: /data/GUARDIAN_FORENSICS_RETENTION_DAYS
+        value: "90"
+
+  - target:
+      kind: DaemonSet
+      name: guardian-monitor
+    patch: |
+      - op: add
+        path: /spec/template/spec/containers/1/env/-
+        value:
+          name: SPRING_PROFILES_ACTIVE
+          value: prod
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/cpu
+        value: "200m"
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/cpu
+        value: "1"
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/memory
+        value: "512Mi"
+      - op: replace
+        path: /spec/template/spec/containers/1/resources/requests/cpu
+        value: "500m"
+      - op: replace
+        path: /spec/template/spec/containers/1/resources/requests/memory
+        value: "512Mi"
+      - op: replace
+        path: /spec/template/spec/containers/1/resources/limits/cpu
+        value: "2"
+      - op: replace
+        path: /spec/template/spec/containers/1/resources/limits/memory
+        value: "1Gi"
+
+  - target:
+      kind: Deployment
+      name: guardian-operator
+    patch: |
+      - op: replace
+        path: /spec/replicas
+        value: 2
+
+images:
+  - name: ghcr.io/naveed-gung/zero-day-guardian/ebpf-monitor
+    newTag: v1.0.0
+  - name: ghcr.io/naveed-gung/zero-day-guardian/detection-engine
+    newTag: v1.0.0
+  - name: ghcr.io/naveed-gung/zero-day-guardian/guardian-operator
+    newTag: v1.0.0

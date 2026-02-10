@@ -1,0 +1,44 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../base
+
+namespace: guardian-system
+
+patches:
+  # Dev overlay: enable dry-run, reduce resources, use debug logging
+  - target:
+      kind: ConfigMap
+      name: guardian-config
+    patch: |
+      - op: replace
+        path: /data/GUARDIAN_ACTION_DRY_RUN
+        value: "true"
+
+  - target:
+      kind: DaemonSet
+      name: guardian-monitor
+    patch: |
+      - op: add
+        path: /spec/template/spec/containers/1/env/-
+        value:
+          name: SPRING_PROFILES_ACTIVE
+          value: dev
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/cpu
+        value: "250m"
+      - op: replace
+        path: /spec/template/spec/containers/1/resources/limits/cpu
+        value: "500m"
+      - op: replace
+        path: /spec/template/spec/containers/1/resources/limits/memory
+        value: "256Mi"
+
+images:
+  - name: ghcr.io/naveed-gung/zero-day-guardian/ebpf-monitor
+    newTag: dev
+  - name: ghcr.io/naveed-gung/zero-day-guardian/detection-engine
+    newTag: dev
+  - name: ghcr.io/naveed-gung/zero-day-guardian/guardian-operator
+    newTag: dev

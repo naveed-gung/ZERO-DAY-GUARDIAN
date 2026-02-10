@@ -1,0 +1,56 @@
+# Rust
+ebpf-monitor/target/
+
+# Java
+detection-engine/.gradle/
+detection-engine/build/
+detection-engine/bin/
+detection-engine/out/
+detection-engine/*.class
+
+# Go
+guardian-operator/bin/
+guardian-operator/cover.out
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Secrets & keys
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+*.crt
+*.cert
+
+# Docker
+*.tar.gz
+
+# Kubernetes
+*.kubeconfig
+kubeconfig*
+secrets*.yaml
+!deploy/base/secrets.yaml
+
+# Forensic / evidence data
+/data/
+*.forensic
+
+# SRS
+srs.txt

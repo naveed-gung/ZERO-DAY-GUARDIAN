@@ -1,0 +1,28 @@
+[package]
+name = "ebpf-monitor-ebpf"
+version = "0.1.0"
+edition = "2021"
+description = "eBPF kernel programs for Zero-Day Guardian syscall monitoring"
+license = "Apache-2.0"
+authors = ["Naveed Gung <naveed-gung>"]
+
+[dependencies]
+aya-ebpf = { workspace = true }
+aya-log-ebpf = { workspace = true }
+ebpf-monitor-common = { path = "../ebpf-monitor-common" }
+
+[[bin]]
+name = "ebpf-monitor-ebpf"
+path = "src/main.rs"
+
+[profile.dev]
+opt-level = 3
+debug = false
+debug-assertions = false
+overflow-checks = false
+
+[profile.release]
+lto = true
+panic = "abort"
+opt-level = 3
+strip = "none"

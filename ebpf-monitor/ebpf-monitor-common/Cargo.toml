@@ -1,0 +1,17 @@
+[package]
+name = "ebpf-monitor-common"
+version = "0.1.0"
+edition = "2021"
+description = "Shared event types for Zero-Day Guardian eBPF monitor"
+license = "Apache-2.0"
+authors = ["Naveed Gung <naveed-gung>"]
+
+[features]
+default = []
+user = ["aya"]
+
+[dependencies]
+aya = { workspace = true, optional = true }
+
+[lib]
+path = "src/lib.rs"

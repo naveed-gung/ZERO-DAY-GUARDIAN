@@ -1,0 +1,24 @@
+[package]
+name = "ebpf-monitor"
+version = "0.1.0"
+edition = "2021"
+description = "Userspace loader for Zero-Day Guardian eBPF programs"
+license = "Apache-2.0"
+authors = ["Naveed Gung <naveed-gung>"]
+publish = false
+
+[dependencies]
+aya = { workspace = true }
+aya-log = { workspace = true }
+ebpf-monitor-common = { path = "../ebpf-monitor-common", features = ["user"] }
+anyhow = { workspace = true }
+clap = { workspace = true }
+env_logger = { workspace = true }
+libc = { workspace = true }
+log = { workspace = true }
+memmap2 = { workspace = true }
+tokio = { workspace = true }
+bytes = "1"
+
+[build-dependencies]
+aya-build = { workspace = true }

@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 500" width="1100" height="500">
+  <defs>
+    <linearGradient id="bgG" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0A0E17"/>
+      <stop offset="100%" style="stop-color:#121929"/>
+    </linearGradient>
+    <marker id="arr" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#00D2FF"/>
+    </marker>
+    <marker id="arrO" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#ED8B00"/>
+    </marker>
+    <marker id="arrR" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#FF4444"/>
+    </marker>
+    <marker id="arrG" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#2ECC71"/>
+    </marker>
+    <filter id="ds">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000" flood-opacity="0.4"/>
+    </filter>
+  </defs>
+
+  <rect width="1100" height="500" fill="url(#bgG)"/>
+
+  <!-- Title -->
+  <text x="550" y="30" text-anchor="middle" font-family="'Segoe UI', sans-serif" font-size="18" font-weight="700" fill="#FFF" letter-spacing="3">EVENT PROCESSING PIPELINE</text>
+  <line x1="350" y1="40" x2="750" y2="40" stroke="#1a3a4a" stroke-width="1"/>
+
+  <!-- Stage 1: Kernel -->
+  <rect x="30" y="70" width="140" height="180" rx="5" fill="#151D2E" stroke="#CE422B" stroke-width="1.5" filter="url(#ds)"/>
+  <rect x="30" y="70" width="140" height="24" rx="5" fill="#CE422B" opacity="0.8"/>
+  <text x="54" y="86" font-family="'Segoe UI', sans-serif" font-size="10" font-weight="700" fill="#FFF">LINUX KERNEL</text>
+  <text x="42" y="112" font-family="'Courier New', monospace" font-size="8" fill="#8892A4">sys_enter_execve</text>
+  <text x="42" y="126" font-family="'Courier New', monospace" font-size="8" fill="#8892A4">sys_enter_unshare</text>
+  <text x="42" y="140" font-family="'Courier New', monospace" font-size="8" fill="#8892A4">sys_enter_mount</text>
+  <text x="42" y="154" font-family="'Courier New', monospace" font-size="8" fill="#8892A4">sys_enter_ptrace</text>
+  <text x="42" y="168" font-family="'Courier New', monospace" font-size="8" fill="#8892A4">xdp ingress pkts</text>
+  <line x1="42" y1="180" x2="158" y2="180" stroke="#1a3a4a" stroke-width="0.5"/>
+  <text x="42" y="198" font-family="'Courier New', monospace" font-size="7" fill="#5a6a8a">cgroup_id mapping</text>
+  <text x="42" y="212" font-family="'Courier New', monospace" font-size="7" fill="#5a6a8a">process tree track</text>
+  <text x="42" y="226" font-family="'Courier New', monospace" font-size="7" fill="#5a6a8a">PerfEventArray out</text>
+
+  <!-- Arrow 1->2 -->
+  <line x1="172" y1="160" x2="208" y2="160" stroke="#CE422B" stroke-width="1.5" marker-end="url(#arrR)"/>
+  <text x="176" y="152" font-family="'Courier New', monospace" font-size="7" fill="#5a6a8a">perf</text>
+
+  <!-- Stage 2: Aya Userspace -->
+  <rect x="210" y="70" width="140" height="180" rx="5" fill="#151D2E" stroke="#CE422B" stroke-width="1.5" filter="url(#ds)"/>
+  <rect x="210" y="70" width="140" height="24" rx="5" fill="#CE422B" opacity="0.6"/>
+  <text x="222" y="86" font-family="'Segoe UI', sans-serif" font-size="10" font-weight="700" fill="#FFF">RUST USERSPACE</text>
+  <text x="222" y="112" font-family="'Courier New', monospace" font-size="8" fill="#8892A4">Aya Ebpf::load()</text>
+  <text x="222" y="126" font-family="'Courier New', monospace" font-size="8" fill="#8892A4">attach tracepoints</text>
+  <text x="222" y="140" font-family="'Courier New', monospace" font-size="8" fill="#8892A4">async perf read</text>
+  <text x="222" y="154" font-family="'Courier New', monospace" font-size="8" fill="#8892A4">deserialize event</text>
+  <text x="222" y="168" font-family="'Courier New', monospace" font-size="8" fill="#8892A4">container resolve</text>
+  <line x1="222" y1="180" x2="338" y2="180" stroke="#1a3a4a" stroke-width="0.5"/>
+  <text x="222" y="198" font-family="'Courier New', monospace" font-size="7" fill="#5a6a8a">tokio runtime</text>
+  <text x="222" y="212" font-family="'Courier New', monospace" font-size="7" fill="#5a6a8a">env_logger</text>
+  <text x="222" y="226" font-family="'Courier New', monospace" font-size="7" fill="#5a6a8a">RingBufWriter</text>
+
+  <!-- Arrow 2->3 -->
+  <line x1="352" y1="160" x2="388" y2="160" stroke="#00D2FF" stroke-width="1.5" marker-end="url(#arr)"/>
+  <text x="354" y="152" font-family="'Courier New', monospace" font-size="7" fill="#00D2FF">mmap</text>
+
+  <!-- Stage 3: Ring Buffer -->
+  <rect x="390" y="110" width="110" height="100" rx="5" fill="#0f1a2a" stroke="#00D2FF" stroke-width="2" stroke-dasharray="4,2" filter="url(#ds)"/>
+  <text x="405" y="142" font-family="'Segoe UI', sans-serif" font-size="9" font-weight="600" fill="#00D2FF">RING BUFFER</text>
+  <text x="400" y="160" font-family="'Courier New', monospace" font-size="7" fill="#5a6a8a">384-byte events</text>
+  <text x="400" y="174" font-family="'Courier New', monospace" font-size="7" fill="#5a6a8a">SPSC lock-free</text>
+  <text x="400" y="188" font-family="'Courier New', monospace" font-size="7" fill="#5a6a8a">16 MiB tmpfs</text>
+  <text x="400" y="202" font-family="'Courier New', monospace" font-size="7" fill="#5a6a8a">atomic positions</text>
+
+  <!-- Arrow 3->4 -->
+  <line x1="502" y1="160" x2="538" y2="160" stroke="#00D2FF" stroke-width="1.5" marker-end="url(#arr)"/>
+  <text x="505" y="152" font-family="'Courier New', monospace" font-size="7" fill="#00D2FF">poll</text>
+
+  <!-- Stage 4: Java Detection -->
+  <rect x="540" y="55" width="170" height="230" rx="5" fill="#151D2E" stroke="#ED8B00" stroke-width="1.5" filter="url(#ds)"/>
+  <rect x="540" y="55" width="170" height="24" rx="5" fill="#ED8B00" opacity="0.8"/>
+  <text x="556" y="71" font-family="'Segoe UI', sans-serif" font-size="10" font-weight="700" fill="#FFF">DETECTION ENGINE</text>
+
+  <text x="552" y="97" font-family="'Courier New', monospace" font-size="8" fill="#ED8B00">1. RingBufferReader</text>
+  <text x="564" y="109" font-family="'Courier New', monospace" font-size="7" fill="#5a6a8a">MappedByteBuffer + VarHandle</text>
+
+  <text x="552" y="127" font-family="'Courier New', monospace" font-size="8" fill="#ED8B00">2. SyscallAnalyzer</text>
+  <text x="564" y="139" font-family="'Courier New', monospace" font-size="7" fill="#5a6a8a">sliding window / scoring</text>
+
+  <text x="552" y="157" font-family="'Courier New', monospace" font-size="8" fill="#ED8B00">3. Attack Detectors</text>
+  <text x="564" y="169" font-family="'Courier New', monospace" font-size="7" fill="#5a6a8a">escape/crypto/lateral</text>
+
+  <text x="552" y="187" font-family="'Courier New', monospace" font-size="8" fill="#ED8B00">4. ThreatIntelService</text>
+  <text x="564" y="199" font-family="'Courier New', monospace" font-size="7" fill="#5a6a8a">VT + AbuseIPDB + OTX</text>
+
+  <text x="552" y="217" font-family="'Courier New', monospace" font-size="8" fill="#FF4444">5. SafeActionExecutor</text>
+  <text x="564" y="229" font-family="'Courier New', monospace" font-size="7" fill="#5a6a8a">validate/rate-limit/rollback</text>
+
+  <text x="552" y="247" font-family="'Courier New', monospace" font-size="8" fill="#ED8B00">6. EvidenceCollector</text>
+  <text x="564" y="259" font-family="'Courier New', monospace" font-size="7" fill="#5a6a8a">pod spec + logs + netstat</text>
+
+  <text x="552" y="275" font-family="'Courier New', monospace" font-size="8" fill="#ED8B00">7. AlertService</text>
+
+  <!-- Arrow 4->5 (to Actions) -->
+  <line x1="712" y1="145" x2="748" y2="105" stroke="#FF4444" stroke-width="1.5" marker-end="url(#arrR)"/>
+  <line x1="712" y1="165" x2="748" y2="195" stroke="#2ECC71" stroke-width="1.5" marker-end="url(#arrG)"/>
+  <line x1="712" y1="185" x2="748" y2="295" stroke="#9B59B6" stroke-width="1.2" marker-end="url(#arr)" stroke-dasharray="3,2"/>
+
+  <!-- Stage 5a: Defensive Actions -->
+  <rect x="750" y="60" width="160" height="100" rx="5" fill="#151D2E" stroke="#FF4444" stroke-width="1.5" filter="url(#ds)"/>
+  <rect x="750" y="60" width="160" height="22" rx="5" fill="#FF4444" opacity="0.7"/>
+  <text x="770" y="75" font-family="'Segoe UI', sans-serif" font-size="9" font-weight="700" fill="#FFF">DEFENSIVE ACTIONS</text>
+  <text x="762" y="100" font-family="'Courier New', monospace" font-size="8" fill="#8892A4">Pod isolation (label)</text>
+  <text x="762" y="114" font-family="'Courier New', monospace" font-size="8" fill="#8892A4">NetworkPolicy deny-all</text>
+  <text x="762" y="128" font-family="'Courier New', monospace" font-size="8" fill="#8892A4">Process termination</text>
+  <text x="762" y="142" font-family="'Courier New', monospace" font-size="8" fill="#8892A4">Token rotation</text>
+
+  <!-- Stage 5b: K8s API -->
+  <rect x="750" y="175" width="160" height="80" rx="5" fill="#151D2E" stroke="#326CE5" stroke-width="1.5" filter="url(#ds)"/>
+  <rect x="750" y="175" width="160" height="22" rx="5" fill="#326CE5" opacity="0.7"/>
+  <text x="775" y="190" font-family="'Segoe UI', sans-serif" font-size="9" font-weight="700" fill="#FFF">KUBERNETES API</text>
+  <text x="762" y="213" font-family="'Courier New', monospace" font-size="8" fill="#8892A4">patch pod labels</text>
+  <text x="762" y="227" font-family="'Courier New', monospace" font-size="8" fill="#8892A4">create NetworkPolicy</text>
+  <text x="762" y="241" font-family="'Courier New', monospace" font-size="8" fill="#8892A4">read audit events</text>
+
+  <!-- Stage 5c: SIEM/Alerts -->
+  <rect x="750" y="270" width="160" height="70" rx="5" fill="#151D2E" stroke="#9B59B6" stroke-width="1.5" filter="url(#ds)"/>
+  <rect x="750" y="270" width="160" height="22" rx="5" fill="#9B59B6" opacity="0.7"/>
+  <text x="780" y="285" font-family="'Segoe UI', sans-serif" font-size="9" font-weight="700" fill="#FFF">SIEM / ALERTS</text>
+  <text x="762" y="308" font-family="'Courier New', monospace" font-size="8" fill="#8892A4">Splunk HEC</text>
+  <text x="762" y="322" font-family="'Courier New', monospace" font-size="8" fill="#8892A4">Elasticsearch bulk</text>
+
+  <!-- Actions -> K8s API -->
+  <line x1="830" y1="162" x2="830" y2="173" stroke="#326CE5" stroke-width="1" marker-end="url(#arr)"/>
+
+  <!-- ======== BOTTOM: Pipeline metrics ======== -->
+  <rect x="30" y="320" width="680" height="160" rx="6" fill="#0D1320" stroke="#1a3a4a" stroke-width="1"/>
+  <text x="46" y="342" font-family="'Segoe UI', sans-serif" font-size="11" font-weight="600" fill="#F39C12">PIPELINE METRICS AND SAFETY CONTROLS</text>
+
+  <!-- Latency bars -->
+  <text x="46" y="370" font-family="'Courier New', monospace" font-size="9" fill="#8892A4">Stage Latency:</text>
+  <rect x="170" y="360" width="80" height="14" rx="2" fill="#CE422B" opacity="0.7"/>
+  <text x="175" y="371" font-family="'Courier New', monospace" font-size="8" fill="#FFF">Kernel &lt;1us</text>
+  <rect x="252" y="360" width="80" height="14" rx="2" fill="#CE422B" opacity="0.5"/>
+  <text x="258" y="371" font-family="'Courier New', monospace" font-size="8" fill="#FFF">Perf ~10us</text>
+  <rect x="334" y="360" width="80" height="14" rx="2" fill="#00D2FF" opacity="0.5"/>
+  <text x="339" y="371" font-family="'Courier New', monospace" font-size="8" fill="#FFF">Ring ~1us</text>
+  <rect x="416" y="360" width="120" height="14" rx="2" fill="#ED8B00" opacity="0.5"/>
+  <text x="421" y="371" font-family="'Courier New', monospace" font-size="8" fill="#FFF">Detect ~10-100ms</text>
+  <rect x="538" y="360" width="100" height="14" rx="2" fill="#FF4444" opacity="0.5"/>
+  <text x="543" y="371" font-family="'Courier New', monospace" font-size="8" fill="#FFF">Action ~50-500ms</text>
+
+  <!-- Safety controls -->
+  <text x="46" y="400" font-family="'Courier New', monospace" font-size="9" fill="#8892A4">Safety Controls:</text>
+  <rect x="170" y="390" width="140" height="18" rx="3" fill="#1a1a2e" stroke="#2ECC71" stroke-width="0.5"/>
+  <text x="178" y="403" font-family="'Courier New', monospace" font-size="8" fill="#2ECC71">Environment approval check</text>
+  <rect x="318" y="390" width="120" height="18" rx="3" fill="#1a1a2e" stroke="#2ECC71" stroke-width="0.5"/>
+  <text x="326" y="403" font-family="'Courier New', monospace" font-size="8" fill="#2ECC71">Threat score threshold</text>
+  <rect x="446" y="390" width="100" height="18" rx="3" fill="#1a1a2e" stroke="#2ECC71" stroke-width="0.5"/>
+  <text x="454" y="403" font-family="'Courier New', monospace" font-size="8" fill="#2ECC71">Rate limiter (token)</text>
+  <rect x="554" y="390" width="100" height="18" rx="3" fill="#1a1a2e" stroke="#2ECC71" stroke-width="0.5"/>
+  <text x="562" y="403" font-family="'Courier New', monospace" font-size="8" fill="#2ECC71">Rollback on failure</text>
+
+  <!-- Throughput -->
+  <text x="46" y="435" font-family="'Courier New', monospace" font-size="9" fill="#8892A4">Throughput:</text>
+  <text x="170" y="435" font-family="'Courier New', monospace" font-size="9" fill="#00D2FF">Ring buffer capacity: ~43,690 events (384 bytes x 16 MiB)</text>
+  <text x="46" y="455" font-family="'Courier New', monospace" font-size="9" fill="#8892A4">Backpressure:</text>
+  <text x="170" y="455" font-family="'Courier New', monospace" font-size="9" fill="#00D2FF">SPSC: writer checks read_pos to avoid overwrite. Events dropped if full.</text>
+  <text x="46" y="475" font-family="'Courier New', monospace" font-size="9" fill="#8892A4">End-to-end:</text>
+  <text x="170" y="475" font-family="'Courier New', monospace" font-size="9" fill="#00D2FF">Kernel syscall to defensive action: target p99 &lt; 1 second</text>
+
+  <!-- Footer -->
+  <text x="550" y="495" text-anchor="middle" font-family="'Segoe UI', sans-serif" font-size="8" fill="#3a4a5a">ZERO-DAY GUARDIAN -- Event Processing Pipeline -- github.com/naveed-gung</text>
+</svg>
