@@ -1,278 +1,277 @@
 name: CI
 
 on:
-    push:
-        branches: [main, develop]
-    pull_request:
-        branches: [main]
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
 
 permissions:
-    contents: read
-    packages: write
+  contents: read
+  packages: write
 
 env:
-    REGISTRY: ghcr.io
-    IMAGE_PREFIX: ghcr.io/${{ github.repository_owner }}/zero-day-guardian
+  REGISTRY: ghcr.io
+  IMAGE_PREFIX: ghcr.io/${{ github.repository_owner }}/zero-day-guardian
 
 jobs:
-    # ------------------------------------------------------------------
-    # Rust eBPF Monitor
-    # ------------------------------------------------------------------
-    rust-check:
-        name: Rust - Check & Test
-        runs-on: ubuntu-latest
-        defaults:
-            run:
-                working-directory: ebpf-monitor
-        steps:
-            - uses: actions/checkout@v4
+  # ------------------------------------------------------------------
+  # Rust eBPF Monitor
+  # ------------------------------------------------------------------
+  rust-check:
+    name: Rust - Check & Test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ebpf-monitor
+    steps:
+      - uses: actions/checkout@v4
 
-            - name: Install Rust nightly
-              uses: dtolnay/rust-toolchain@nightly
-              with:
-                  components: rustfmt, clippy
-                  targets: bpfel-unknown-none
+      - name: Install Rust nightly
+        uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: rustfmt, clippy, rust-src
 
-            - name: Install bpf-linker
-              run: cargo install bpf-linker
+      - name: Install bpf-linker
+        run: cargo install bpf-linker
 
-            - name: Cache cargo registry
-              uses: actions/cache@v4
-              with:
-                  path: |
-                      ~/.cargo/registry
-                      ~/.cargo/git
-                      ebpf-monitor/target
-                  key: ${{ runner.os }}-cargo-${{ hashFiles('ebpf-monitor/Cargo.lock') }}
-                  restore-keys: ${{ runner.os }}-cargo-
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            ebpf-monitor/target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('ebpf-monitor/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-
 
-            - name: Check formatting
-              run: cargo fmt --all -- --check
+      - name: Check formatting
+        run: cargo fmt --all -- --check
 
-            - name: Clippy lint (userspace)
-              run: cargo clippy --workspace --exclude zero-day-guardian-ebpf -- -D warnings
+      - name: Clippy lint (userspace)
+        run: cargo clippy --workspace --exclude zero-day-guardian-ebpf -- -D warnings
 
-            - name: Build eBPF programs
-              run: cargo xtask build-ebpf
-              env:
-                  AYA_BUILD_EBPF: true
+      - name: Build eBPF programs
+        run: cargo xtask build-ebpf
+        env:
+          AYA_BUILD_EBPF: true
 
-            - name: Build userspace
-              run: cargo build --release
+      - name: Build userspace
+        run: cargo build --release
 
-            - name: Run tests
-              run: cargo test --workspace --exclude zero-day-guardian-ebpf
+      - name: Run tests
+        run: cargo test --workspace --exclude zero-day-guardian-ebpf
 
-    rust-docker:
-        name: Rust - Docker Build
-        needs: rust-check
-        runs-on: ubuntu-latest
-        if: github.event_name == 'push'
-        steps:
-            - uses: actions/checkout@v4
+  rust-docker:
+    name: Rust - Docker Build
+    needs: rust-check
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v4
 
-            - name: Log in to GHCR
-              uses: docker/login-action@v3
-              with:
-                  registry: ${{ env.REGISTRY }}
-                  username: ${{ github.actor }}
-                  password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-            - name: Set up Docker Buildx
-              uses: docker/setup-buildx-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-            - name: Build and push ebpf-monitor
-              uses: docker/build-push-action@v5
-              with:
-                  context: ebpf-monitor
-                  push: true
-                  tags: |
-                      ${{ env.IMAGE_PREFIX }}/ebpf-monitor:${{ github.sha }}
-                      ${{ env.IMAGE_PREFIX }}/ebpf-monitor:latest
-                  cache-from: type=gha
-                  cache-to: type=gha,mode=max
+      - name: Build and push ebpf-monitor
+        uses: docker/build-push-action@v5
+        with:
+          context: ebpf-monitor
+          push: true
+          tags: |
+            ${{ env.IMAGE_PREFIX }}/ebpf-monitor:${{ github.sha }}
+            ${{ env.IMAGE_PREFIX }}/ebpf-monitor:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
-    # ------------------------------------------------------------------
-    # Java Detection Engine
-    # ------------------------------------------------------------------
-    java-check:
-        name: Java - Build & Test
-        runs-on: ubuntu-latest
-        defaults:
-            run:
-                working-directory: detection-engine
-        steps:
-            - uses: actions/checkout@v4
+  # ------------------------------------------------------------------
+  # Java Detection Engine
+  # ------------------------------------------------------------------
+  java-check:
+    name: Java - Build & Test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: detection-engine
+    steps:
+      - uses: actions/checkout@v4
 
-            - name: Set up JDK 21
-              uses: actions/setup-java@v4
-              with:
-                  java-version: "21"
-                  distribution: temurin
-                  cache: gradle
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: "21"
+          distribution: temurin
+          cache: gradle
 
-            - name: Grant execute permission for gradlew
-              run: chmod +x gradlew
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
 
-            - name: Build and test
-              run: ./gradlew build
+      - name: Build and test
+        run: ./gradlew build
 
-            - name: Upload test results
-              uses: actions/upload-artifact@v4
-              if: always()
-              with:
-                  name: java-test-results
-                  path: detection-engine/build/reports/tests/
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: java-test-results
+          path: detection-engine/build/reports/tests/
 
-    java-docker:
-        name: Java - Docker Build
-        needs: java-check
-        runs-on: ubuntu-latest
-        if: github.event_name == 'push'
-        steps:
-            - uses: actions/checkout@v4
+  java-docker:
+    name: Java - Docker Build
+    needs: java-check
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v4
 
-            - name: Log in to GHCR
-              uses: docker/login-action@v3
-              with:
-                  registry: ${{ env.REGISTRY }}
-                  username: ${{ github.actor }}
-                  password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-            - name: Set up Docker Buildx
-              uses: docker/setup-buildx-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-            - name: Build and push detection-engine
-              uses: docker/build-push-action@v5
-              with:
-                  context: detection-engine
-                  push: true
-                  tags: |
-                      ${{ env.IMAGE_PREFIX }}/detection-engine:${{ github.sha }}
-                      ${{ env.IMAGE_PREFIX }}/detection-engine:latest
-                  cache-from: type=gha
-                  cache-to: type=gha,mode=max
+      - name: Build and push detection-engine
+        uses: docker/build-push-action@v5
+        with:
+          context: detection-engine
+          push: true
+          tags: |
+            ${{ env.IMAGE_PREFIX }}/detection-engine:${{ github.sha }}
+            ${{ env.IMAGE_PREFIX }}/detection-engine:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
-    # ------------------------------------------------------------------
-    # Go Kubernetes Operator
-    # ------------------------------------------------------------------
-    go-check:
-        name: Go - Build & Test
-        runs-on: ubuntu-latest
-        defaults:
-            run:
-                working-directory: guardian-operator
-        steps:
-            - uses: actions/checkout@v4
+  # ------------------------------------------------------------------
+  # Go Kubernetes Operator
+  # ------------------------------------------------------------------
+  go-check:
+    name: Go - Build & Test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: guardian-operator
+    steps:
+      - uses: actions/checkout@v4
 
-            - name: Set up Go
-              uses: actions/setup-go@v5
-              with:
-                  go-version: "1.22"
-                  cache-dependency-path: guardian-operator/go.sum
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+          cache-dependency-path: guardian-operator/go.sum
 
-            - name: Verify dependencies
-              run: go mod verify
+      - name: Verify dependencies
+        run: go mod verify
 
-            - name: Vet
-              run: go vet ./...
+      - name: Vet
+        run: go vet ./...
 
-            - name: Build
-              run: go build -o bin/manager ./cmd/main.go
+      - name: Build
+        run: go build -o bin/manager ./cmd/main.go
 
-            - name: Test
-              run: go test ./... -coverprofile=coverage.out -v
+      - name: Test
+        run: go test ./... -coverprofile=coverage.out -v
 
-            - name: Upload coverage
-              uses: actions/upload-artifact@v4
-              with:
-                  name: go-coverage
-                  path: guardian-operator/coverage.out
+      - name: Upload coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: go-coverage
+          path: guardian-operator/coverage.out
 
-    go-docker:
-        name: Go - Docker Build
-        needs: go-check
-        runs-on: ubuntu-latest
-        if: github.event_name == 'push'
-        steps:
-            - uses: actions/checkout@v4
+  go-docker:
+    name: Go - Docker Build
+    needs: go-check
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v4
 
-            - name: Log in to GHCR
-              uses: docker/login-action@v3
-              with:
-                  registry: ${{ env.REGISTRY }}
-                  username: ${{ github.actor }}
-                  password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-            - name: Set up Docker Buildx
-              uses: docker/setup-buildx-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-            - name: Build and push guardian-operator
-              uses: docker/build-push-action@v5
-              with:
-                  context: guardian-operator
-                  push: true
-                  tags: |
-                      ${{ env.IMAGE_PREFIX }}/guardian-operator:${{ github.sha }}
-                      ${{ env.IMAGE_PREFIX }}/guardian-operator:latest
-                  cache-from: type=gha
-                  cache-to: type=gha,mode=max
+      - name: Build and push guardian-operator
+        uses: docker/build-push-action@v5
+        with:
+          context: guardian-operator
+          push: true
+          tags: |
+            ${{ env.IMAGE_PREFIX }}/guardian-operator:${{ github.sha }}
+            ${{ env.IMAGE_PREFIX }}/guardian-operator:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
-    # ------------------------------------------------------------------
-    # Kubernetes Manifests Validation
-    # ------------------------------------------------------------------
-    manifests:
-        name: Validate Manifests
-        runs-on: ubuntu-latest
-        steps:
-            - uses: actions/checkout@v4
+  # ------------------------------------------------------------------
+  # Kubernetes Manifests Validation
+  # ------------------------------------------------------------------
+  manifests:
+    name: Validate Manifests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
 
-            - name: Install kustomize
-              uses: imranismail/setup-kustomize@v2
+      - name: Install kustomize
+        uses: imranismail/setup-kustomize@v2
 
-            - name: Validate dev overlay
-              run: kustomize build deploy/overlays/dev > /dev/null
+      - name: Validate dev overlay
+        run: kustomize build deploy/overlays/dev > /dev/null
 
-            - name: Validate prod overlay
-              run: kustomize build deploy/overlays/prod > /dev/null
+      - name: Validate prod overlay
+        run: kustomize build deploy/overlays/prod > /dev/null
 
-            - name: Install kubeconform
-              run: |
-                  curl -sL https://github.com/yannh/kubeconform/releases/latest/download/kubeconform-linux-amd64.tar.gz | tar xz
-                  sudo mv kubeconform /usr/local/bin/
+      - name: Install kubeconform
+        run: |
+          curl -sL https://github.com/yannh/kubeconform/releases/latest/download/kubeconform-linux-amd64.tar.gz | tar xz
+          sudo mv kubeconform /usr/local/bin/
 
-            - name: Validate with kubeconform
-              run: |
-                  kustomize build deploy/overlays/dev | kubeconform -strict -ignore-missing-schemas -summary
-                  kustomize build deploy/overlays/prod | kubeconform -strict -ignore-missing-schemas -summary
+      - name: Validate with kubeconform
+        run: |
+          kustomize build deploy/overlays/dev | kubeconform -strict -ignore-missing-schemas -summary
+          kustomize build deploy/overlays/prod | kubeconform -strict -ignore-missing-schemas -summary
 
-    # ------------------------------------------------------------------
-    # Security Scanning
-    # ------------------------------------------------------------------
-    security:
-        name: Security Scan
-        runs-on: ubuntu-latest
-        needs: [rust-docker, java-docker, go-docker]
-        if: github.event_name == 'push'
-        strategy:
-            matrix:
-                image:
-                    - ebpf-monitor
-                    - detection-engine
-                    - guardian-operator
-        steps:
-            - uses: actions/checkout@v4
+  # ------------------------------------------------------------------
+  # Security Scanning
+  # ------------------------------------------------------------------
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    needs: [rust-docker, java-docker, go-docker]
+    if: github.event_name == 'push'
+    strategy:
+      matrix:
+        image:
+          - ebpf-monitor
+          - detection-engine
+          - guardian-operator
+    steps:
+      - uses: actions/checkout@v4
 
-            - name: Run Trivy vulnerability scanner
-              uses: aquasecurity/trivy-action@master
-              with:
-                  image-ref: "${{ env.IMAGE_PREFIX }}/${{ matrix.image }}:${{ github.sha }}"
-                  format: sarif
-                  output: trivy-results.sarif
-                  severity: CRITICAL,HIGH
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: "${{ env.IMAGE_PREFIX }}/${{ matrix.image }}:${{ github.sha }}"
+          format: sarif
+          output: trivy-results.sarif
+          severity: CRITICAL,HIGH
 
-            - name: Upload Trivy scan results
-              uses: github/codeql-action/upload-sarif@v3
-              if: always()
-              with:
-                  sarif_file: trivy-results.sarif
+      - name: Upload Trivy scan results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: trivy-results.sarif

@@ -1,0 +1,11 @@
+# Pin Rust nightly toolchain for eBPF compilation.
+#
+# We use `rust-src` (NOT `targets = ["bpfel-unknown-none"]`) because:
+#   - aya-rs compiles core from source via `-Z build-std=core`
+#   - The pre-built `rust-std-bpfel-unknown-none` is frequently missing
+#     from nightly distributions, causing toolchain install failures
+#     that waste CI minutes walking back through dozens of nightlies.
+
+[toolchain]
+channel = "nightly"
+components = ["rustfmt", "clippy", "rust-src"]

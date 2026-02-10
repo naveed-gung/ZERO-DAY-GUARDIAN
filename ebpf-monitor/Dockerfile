@@ -24,7 +24,9 @@ RUN apt-get update && apt-get install -y \
 # Install bpf-linker for eBPF compilation
 RUN cargo install bpf-linker
 
-# Install the Rust nightly toolchain with rust-src (required for eBPF)
+# Install rust-src (aya builds core from source via -Z build-std=core;
+# using rust-src avoids reliance on pre-built rust-std-bpfel-unknown-none
+# which is frequently missing from nightly distributions)
 RUN rustup component add rust-src --toolchain nightly
 
 WORKDIR /build
