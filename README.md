@@ -33,9 +33,7 @@ The system combines three purpose-built components across three languages:
 | **Detection Engine** | Java (Spring Boot 3) | Analyzes event streams, detects attack patterns, integrates threat intelligence, executes defensive actions |
 | **Cluster Operator** | Go (Kubebuilder)     | Manages CRD-based security policies, orchestrates DaemonSet deployment, handles cluster-wide remediation    |
 
-All components are production-ready, using real APIs and real Kubernetes integration -- no simulations.
-
-### Why No UI?
+All components are production-ready, using real APIs and real Kubernetes integration.
 
 Zero-Day Guardian is designed as an **infrastructure-level security primitive**, not an end-user application. It follows the same operational model as other Kubernetes-native security tools (Falco, Cilium, Tetragon):
 
