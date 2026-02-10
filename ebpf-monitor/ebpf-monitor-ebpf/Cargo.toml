@@ -14,15 +14,3 @@ ebpf-monitor-common = { path = "../ebpf-monitor-common" }
 [[bin]]
 name = "ebpf-monitor-ebpf"
 path = "src/main.rs"
-
-[profile.dev]
-opt-level = 3
-debug = false
-debug-assertions = false
-overflow-checks = false
-
-[profile.release]
-lto = true
-panic = "abort"
-opt-level = 3
-strip = "none"

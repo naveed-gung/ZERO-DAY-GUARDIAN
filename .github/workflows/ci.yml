@@ -49,18 +49,13 @@ jobs:
         run: cargo fmt --all -- --check
 
       - name: Clippy lint (userspace)
-        run: cargo clippy --workspace --exclude zero-day-guardian-ebpf -- -D warnings
+        run: cargo clippy --workspace --exclude ebpf-monitor-ebpf -- -D warnings
 
-      - name: Build eBPF programs
-        run: cargo xtask build-ebpf
-        env:
-          AYA_BUILD_EBPF: true
-
-      - name: Build userspace
+      - name: Build userspace + eBPF programs
         run: cargo build --release
 
       - name: Run tests
-        run: cargo test --workspace --exclude zero-day-guardian-ebpf
+        run: cargo test --workspace --exclude ebpf-monitor-ebpf
 
   rust-docker:
     name: Rust - Docker Build

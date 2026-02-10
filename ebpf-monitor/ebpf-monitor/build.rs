@@ -1,15 +1,16 @@
-use aya_build::cargo_metadata;
+use aya_build::{build_ebpf, Package, Toolchain};
 
 fn main() {
     // Build the eBPF crate for the BPF target.
-    // aya-build resolves the ebpf-monitor-ebpf crate from the workspace
-    // and compiles it with the bpf-linker for the bpfel-unknown-none target.
-    let metadata = cargo_metadata().expect("Failed to read cargo metadata");
-    let ebpf_package = metadata
-        .packages
-        .iter()
-        .find(|p| p.name == "ebpf-monitor-ebpf")
-        .expect("ebpf-monitor-ebpf package not found in workspace");
-
-    aya_build::build_ebpf([ebpf_package.clone()]).expect("Failed to build eBPF programs");
+    // aya-build compiles ebpf-monitor-ebpf with -Z build-std=core
+    // targeting bpfel-unknown-none via bpf-linker.
+    build_ebpf(
+        [Package {
+            name: "ebpf-monitor-ebpf",
+            root_dir: "../ebpf-monitor-ebpf",
+            ..Default::default()
+        }],
+        Toolchain::default(),
+    )
+    .expect("Failed to build eBPF programs");
 }
