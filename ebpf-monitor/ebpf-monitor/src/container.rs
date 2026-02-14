@@ -17,11 +17,17 @@ pub struct ContainerResolver {
     cache: Arc<RwLock<HashMap<u64, String>>>,
 }
 
-impl ContainerResolver {
-    pub fn new() -> Self {
+impl Default for ContainerResolver {
+    fn default() -> Self {
         Self {
             cache: Arc::new(RwLock::new(HashMap::new())),
         }
+    }
+}
+
+impl ContainerResolver {
+    pub fn new() -> Self {
+        Self::default()
     }
 
     /// Resolve a cgroup ID to a container ID string.
