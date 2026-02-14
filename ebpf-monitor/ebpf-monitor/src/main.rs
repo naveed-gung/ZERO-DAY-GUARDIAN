@@ -156,7 +156,7 @@ async fn main() -> Result<()> {
     ];
 
     for map_name in &map_names {
-        let perf_array = AsyncPerfEventArray::try_from(
+        let mut perf_array = AsyncPerfEventArray::try_from(
             ebpf.take_map(map_name)
                 .with_context(|| format!("Map {} not found", map_name))?,
         )?;
