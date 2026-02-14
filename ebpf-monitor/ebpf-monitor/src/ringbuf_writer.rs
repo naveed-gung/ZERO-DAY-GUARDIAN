@@ -11,7 +11,7 @@
 //!
 //! Author: Naveed Gung
 
-use std::fs::{File, OpenOptions};
+use std::fs::OpenOptions;
 use std::path::Path;
 use std::sync::atomic::{AtomicU64, Ordering};
 
@@ -219,7 +219,7 @@ impl Drop for RingBufWriter {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ebpf_monitor_common::{EventType, EVENT_MAGIC, EVENT_VERSION};
+    use ebpf_monitor_common::EventType;
     use std::path::PathBuf;
 
     fn temp_path() -> PathBuf {
