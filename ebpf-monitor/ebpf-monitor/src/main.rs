@@ -199,8 +199,9 @@ async fn main() -> Result<()> {
                             continue;
                         }
 
-                        // Re-interpret as SyscallEvent
-                        let event = unsafe { &*(buf.as_ptr() as *const SyscallEvent) };
+                        // Re-interpret as SyscallEvent (use read_unaligned for safety)
+                        let event: SyscallEvent =
+                            unsafe { std::ptr::read_unaligned(buf.as_ptr() as *const SyscallEvent) };
 
                         // Validate magic
                         if !event.is_valid() {
@@ -209,7 +210,7 @@ async fn main() -> Result<()> {
                         }
 
                         // Enrich event with container ID if not already set
-                        let mut enriched = *event;
+                        let mut enriched = event;
                         if enriched.container_id[0] == 0 && enriched.cgroup_id > 1 {
                             if let Some(container_id) =
                                 resolver.resolve(enriched.cgroup_id, enriched.pid)
