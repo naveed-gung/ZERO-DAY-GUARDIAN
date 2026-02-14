@@ -144,7 +144,8 @@ async fn main() -> Result<()> {
     // Spawn per-CPU event readers for each PerfEventArray
     // ------------------------------------------------------------------
 
-    let cpus = online_cpus().context("Failed to get online CPUs")?;
+    let cpus = online_cpus()
+        .map_err(|(msg, err)| anyhow::anyhow!("{}: {}", msg, err))?;
     info!("Online CPUs: {}", cpus.len());
 
     let map_names = [
