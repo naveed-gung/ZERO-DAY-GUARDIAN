@@ -10,29 +10,29 @@
 # ============================================================================
 
 # --- Stage 1: Build ---
-FROM rust:nightly-bookworm AS builder
+FROM rust:bookworm AS builder
+
+RUN rustup toolchain install nightly --profile minimal --component rust-src
+RUN rustup default nightly
 
 # Install build dependencies
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     clang \
     llvm \
     libelf-dev \
-    linux-headers-generic \
+    musl-tools \
+    zstd \
     pkg-config \
     && rm -rf /var/lib/apt/lists/*
 
 # Install bpf-linker for eBPF compilation
-RUN cargo install bpf-linker
-
-# Install rust-src (aya builds core from source via -Z build-std=core;
-# using rust-src avoids reliance on pre-built rust-std-bpfel-unknown-none
-# which is frequently missing from nightly distributions)
-RUN rustup component add rust-src --toolchain nightly
+COPY install-bpf-linker.sh /tmp/install-bpf-linker.sh
+RUN bash /tmp/install-bpf-linker.sh /usr/local/bin
 
 WORKDIR /build
 
 # Copy workspace files
-COPY Cargo.toml Cargo.toml
+COPY Cargo.toml Cargo.lock ./
 COPY .cargo .cargo
 COPY ebpf-monitor-common ebpf-monitor-common
 COPY ebpf-monitor-ebpf ebpf-monitor-ebpf
@@ -56,5 +56,7 @@ COPY --from=builder /build/target/x86_64-unknown-linux-musl/release/ebpf-monitor
 
 # Ring buffer mount point
 VOLUME ["/shared/ringbuf"]
+
+USER 65532:65532
 
 ENTRYPOINT ["/app/ebpf-loader"]

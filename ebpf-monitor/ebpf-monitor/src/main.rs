@@ -144,8 +144,7 @@ async fn main() -> Result<()> {
     // Spawn per-CPU event readers for each PerfEventArray
     // ------------------------------------------------------------------
 
-    let cpus = online_cpus()
-        .map_err(|(msg, err)| anyhow::anyhow!("{}: {}", msg, err))?;
+    let cpus = online_cpus().map_err(|(msg, err)| anyhow::anyhow!("{}: {}", msg, err))?;
     info!("Online CPUs: {}", cpus.len());
 
     let map_names = [
@@ -201,8 +200,9 @@ async fn main() -> Result<()> {
                         }
 
                         // Re-interpret as SyscallEvent (use read_unaligned for safety)
-                        let event: SyscallEvent =
-                            unsafe { std::ptr::read_unaligned(buf.as_ptr() as *const SyscallEvent) };
+                        let event: SyscallEvent = unsafe {
+                            std::ptr::read_unaligned(buf.as_ptr() as *const SyscallEvent)
+                        };
 
                         // Validate magic
                         if !event.is_valid() {
