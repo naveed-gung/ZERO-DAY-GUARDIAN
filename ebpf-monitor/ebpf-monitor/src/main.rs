@@ -192,8 +192,7 @@ async fn main() -> Result<()> {
                         }
                     };
 
-                    for i in 0..events.read {
-                        let buf = &buffers[i];
+                    for buf in &buffers[..events.read] {
                         if buf.len() < EVENT_SIZE {
                             warn!("{}: Event too small ({} bytes)", label, buf.len());
                             continue;
