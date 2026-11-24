@@ -4,7 +4,7 @@ package com.zerodayguardian.detector.event;
  * Event types mirroring the Rust eBPF EventType enum.
  *
  * <p>
- * Wire values must match the u32 discriminant in
+ * Wire values must match the u8 discriminant in
  * {@code ebpf-monitor-common/src/lib.rs}.
  * </p>
  *
@@ -37,7 +37,7 @@ public enum EventType {
     }
 
     /**
-     * Decode from the u32 wire representation.
+     * Decode from the u8 wire representation.
      *
      * @param value wire value from the ring buffer
      * @return the corresponding EventType

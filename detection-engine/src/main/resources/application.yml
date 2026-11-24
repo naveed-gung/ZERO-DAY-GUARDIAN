@@ -46,10 +46,10 @@ guardian:
   # Defensive Action Configuration
   # ---------------------------------------------------------------------------
   action:
-    approved-namespaces: ${APPROVED_NAMESPACES:default}
+    approved-namespaces: ${APPROVED_NAMESPACES:}
     excluded-namespaces: ${EXCLUDED_NAMESPACES:kube-system,kube-public,kube-node-lease}
     rate-limit-per-minute: ${RATE_LIMIT_PER_MINUTE:5}
-    dry-run: ${ACTION_DRY_RUN:false}
+    dry-run: ${ACTION_DRY_RUN:true}
 
   # ---------------------------------------------------------------------------
   # Threat Intelligence API Configuration

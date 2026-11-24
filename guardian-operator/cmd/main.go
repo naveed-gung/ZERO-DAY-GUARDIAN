@@ -8,6 +8,7 @@ import (
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
@@ -36,7 +37,7 @@ func main() {
 	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8384", "The address the probe endpoint binds to.")
 	flag.BoolVar(&enableLeaderElection, "leader-elect", false,
 		"Enable leader election for controller manager, ensuring only one active controller.")
-	flag.StringVar(&namespace, "namespace", "zero-day-guardian",
+	flag.StringVar(&namespace, "namespace", "guardian-system",
 		"The namespace where Guardian resources are deployed.")
 	flag.Parse()
 
@@ -45,6 +46,10 @@ func main() {
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme: scheme,
+		Cache: cache.Options{
+			DefaultNamespaces: map[string]cache.Config{namespace: {}},
+		},
+		LeaderElectionNamespace: namespace,
 		Metrics: metricsserver.Options{
 			BindAddress: metricsAddr,
 		},
@@ -59,7 +64,9 @@ func main() {
 
 	daemonSetMgr := &controller.DaemonSetManager{
 		Client:    mgr.GetClient(),
-		Namespace: namespace,
+		Namespace:     namespace,
+		MonitorImage:  os.Getenv("GUARDIAN_MONITOR_IMAGE"),
+		DetectorImage: os.Getenv("GUARDIAN_DETECTOR_IMAGE"),
 	}
 
 	if err = (&controller.GuardianPolicyReconciler{

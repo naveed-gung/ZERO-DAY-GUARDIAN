@@ -94,7 +94,7 @@ spec:
                       type: array
                       items:
                         type: string
-                      description: Namespaces allowed to receive automated actions. Empty means all non-excluded.
+                      description: Namespaces allowed to receive automated actions. Empty disables automated mutations.
                     excludedNamespaces:
                       type: array
                       items:

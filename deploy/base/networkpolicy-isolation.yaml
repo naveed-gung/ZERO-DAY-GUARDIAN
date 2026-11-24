@@ -1,5 +1,4 @@
-# Quarantine NetworkPolicy template - applied dynamically by the detection engine
-# to isolate compromised pods. This serves as a reference / default policy.
+# Optional additive NetworkPolicy example. Existing allow rules still apply.
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -10,14 +9,13 @@ metadata:
     app.kubernetes.io/component: quarantine
   annotations:
     guardian.zerodayguardian.io/description: >
-      Template for deny-all network policy applied to quarantined pods.
-      The detection engine creates per-pod copies targeting pods labeled
-      with guardian.zerodayguardian.io/quarantine=true.
+      Selects Guardian-labeled pods in this namespace. Applicable allow policies
+      can still permit traffic. Use the Cilium example for explicit deny rules.
 spec:
   # Selector matches quarantined pods
   podSelector:
     matchLabels:
-      guardian.zerodayguardian.io/quarantine: "true"
+      guardian.zerodayguardian.io/quarantined: "true"
   policyTypes:
     - Ingress
     - Egress

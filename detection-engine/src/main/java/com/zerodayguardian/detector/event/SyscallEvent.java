@@ -3,7 +3,6 @@ package com.zerodayguardian.detector.event;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
-import java.time.Instant;
 
 /**
  * Java representation of the 384-byte {@code SyscallEvent} from the ring
@@ -18,18 +17,20 @@ import java.time.Instant;
  * Offset  Size  Field
  * ------  ----  -----
  *   0       4   magic        (0xDEADBEEF)
- *   4       4   version
- *   8       4   event_type   (EventType wire value)
- *  12       4   flags
- *  16       8   timestamp_ns
- *  24       4   pid
- *  28       4   tgid
- *  32       4   uid
- *  36       4   gid
- *  40      16   comm
- *  56     256   filename
- * 312       8   cgroup_id
- * 320      64   container_id
+ *   4       1   version
+ *   5       1   event_type
+ *   6       2   flags
+ *   8       8   timestamp_ns (monotonic)
+ *  16       4   pid
+ *  20       4   tgid
+ *  24       4   uid
+ *  28       4   gid
+ *  32      16   comm
+ *  48     256   filename
+ * 304       8   cgroup_id
+ * 312      64   container_id
+ * 376       4   syscall_nr
+ * 380       4   return_value
  * ------  ----
  * Total: 384 bytes
  * </pre>
@@ -74,6 +75,9 @@ public record SyscallEvent(
      * @throws IllegalArgumentException if magic or version mismatches
      */
     public static SyscallEvent decode(ByteBuffer buf) {
+        if (buf.remaining() < SERIALIZED_SIZE) {
+            throw new IllegalArgumentException("Truncated syscall event");
+        }
         buf.order(ByteOrder.LITTLE_ENDIAN);
 
         int magic = buf.getInt();
@@ -82,15 +86,15 @@ public record SyscallEvent(
                     String.format("Invalid magic: 0x%08X (expected 0x%08X)", magic, MAGIC));
         }
 
-        int version = buf.getInt();
+        int version = Byte.toUnsignedInt(buf.get());
         if (version != CURRENT_VERSION) {
             throw new IllegalArgumentException(
                     "Unsupported event version: " + version + " (expected " + CURRENT_VERSION + ")");
         }
 
-        int eventTypeWire = buf.getInt();
+        int eventTypeWire = Byte.toUnsignedInt(buf.get());
         EventType eventType = EventType.fromWireValue(eventTypeWire);
-        int flags = buf.getInt();
+        int flags = Short.toUnsignedInt(buf.getShort());
         long timestampNs = buf.getLong();
         int pid = buf.getInt();
         int tgid = buf.getInt();
@@ -101,6 +105,7 @@ public record SyscallEvent(
         String filename = readFixedString(buf, 256);
         long cgroupId = buf.getLong();
         String containerId = readFixedString(buf, 64);
+        buf.position(buf.position() + 2 * Integer.BYTES);
 
         return new SyscallEvent(
                 magic, version, eventType, flags, timestampNs,
@@ -134,13 +139,6 @@ public record SyscallEvent(
 
     public boolean isSuspicious() {
         return (flags & FLAG_SUSPICIOUS) != 0;
-    }
-
-    /** Convert the nanosecond kernel timestamp to an {@link Instant}. */
-    public Instant timestamp() {
-        return Instant.ofEpochSecond(
-                timestampNs / 1_000_000_000L,
-                timestampNs % 1_000_000_000L);
     }
 
     /** True when the event carries a non-empty container ID. */

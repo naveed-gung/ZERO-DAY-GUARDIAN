@@ -119,10 +119,10 @@ fn extract_container_id(cgroup_path: &str) -> Option<String> {
         if let Some(last_slash) = cgroup_path.rfind('/') {
             let candidate = &cgroup_path[last_slash + 1..];
             // Strip common prefixes
+            let candidate = candidate.strip_suffix(".scope").unwrap_or(candidate);
             let cleaned = candidate
                 .strip_prefix("cri-containerd-")
                 .or_else(|| candidate.strip_prefix("crio-"))
-                .or_else(|| candidate.strip_suffix(".scope"))
                 .unwrap_or(candidate);
 
             if cleaned.len() >= 12 && cleaned.chars().all(|c| c.is_ascii_hexdigit()) {

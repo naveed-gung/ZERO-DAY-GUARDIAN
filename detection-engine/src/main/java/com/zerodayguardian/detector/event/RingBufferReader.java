@@ -60,7 +60,7 @@ public class RingBufferReader {
     private static final int READ_POS_OFFSET = 8;
     private static final int CAPACITY_OFFSET = 16;
 
-    private static final VarHandle FENCE = MethodHandles.arrayElementVarHandle(long[].class);
+    private static final VarHandle POSITIONS = MethodHandles.byteBufferViewVarHandle(long[].class, ByteOrder.LITTLE_ENDIAN);
 
     private final RingBufferConfig config;
     private final MeterRegistry meterRegistry;
@@ -194,10 +194,7 @@ public class RingBufferReader {
 
     /** Atomic acquire-read of the producer's write position. */
     private long readWritePos() {
-        // Acquire fence to see producer's writes
-        long[] fence = new long[1];
-        FENCE.getAcquire(fence, 0);
-        return mappedBuffer.getLong(WRITE_POS_OFFSET);
+        return (long) POSITIONS.getAcquire(mappedBuffer, WRITE_POS_OFFSET);
     }
 
     /** Read the consumer's current read position. */
@@ -210,9 +207,7 @@ public class RingBufferReader {
      * space.
      */
     private void advanceReadPos(long newPos) {
-        mappedBuffer.putLong(READ_POS_OFFSET, newPos);
-        long[] fence = new long[1];
-        FENCE.setRelease(fence, 0, 0L);
+        POSITIONS.setRelease(mappedBuffer, READ_POS_OFFSET, newPos);
     }
 
     /** Return the number of events currently pending in the buffer. */

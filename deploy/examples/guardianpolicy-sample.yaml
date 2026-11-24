@@ -16,7 +16,7 @@ spec:
       - lateral-movement
       - sequence-analysis
   response:
-    dryRun: false
+    dryRun: true
     rateLimitPerMinute: 10
     approvedNamespaces: []
     excludedNamespaces:

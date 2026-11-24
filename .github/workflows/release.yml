@@ -6,8 +6,7 @@ on:
             - "v*"
 
 permissions:
-    contents: write
-    packages: write
+    contents: read
 
 env:
     REGISTRY: ghcr.io
@@ -15,6 +14,9 @@ env:
 
 jobs:
     release-images:
+        permissions:
+            contents: read
+            packages: write
         name: Build & Push Release Images
         runs-on: ubuntu-latest
         strategy:
@@ -27,60 +29,80 @@ jobs:
                     - component: guardian-operator
                       context: guardian-operator
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
             - name: Log in to GHCR
-              uses: docker/login-action@v3
+              uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
               with:
                   registry: ${{ env.REGISTRY }}
                   username: ${{ github.actor }}
                   password: ${{ secrets.GITHUB_TOKEN }}
 
             - name: Set up Docker Buildx
-              uses: docker/setup-buildx-action@v3
+              uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
 
             - name: Extract version from tag
               id: version
               run: echo "VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_OUTPUT
 
             - name: Build and push
-              uses: docker/build-push-action@v5
+              uses: docker/build-push-action@ca052bb54ab0790a636c9b5f226502c73d547a25 # v5
               with:
                   context: ${{ matrix.context }}
                   push: true
+                  provenance: mode=min
+                  sbom: true
                   tags: |
                       ${{ env.IMAGE_PREFIX }}/${{ matrix.component }}:${{ github.ref_name }}
                       ${{ env.IMAGE_PREFIX }}/${{ matrix.component }}:${{ steps.version.outputs.VERSION }}
-                      ${{ env.IMAGE_PREFIX }}/${{ matrix.component }}:latest
                   cache-from: type=gha
                   cache-to: type=gha,mode=max
 
     release-manifests:
+        permissions:
+            contents: write
         name: Package Manifests
         runs-on: ubuntu-latest
         needs: release-images
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
             - name: Install kustomize
-              uses: imranismail/setup-kustomize@v2
+              uses: imranismail/setup-kustomize@2ba527d4d055ab63514ba50a99456fc35684947f # v2
 
             - name: Extract version
               id: version
               run: echo "VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_OUTPUT
 
             - name: Build production manifests
+              env:
+                  VERSION: ${{ steps.version.outputs.VERSION }}
               run: |
-                  cd deploy/overlays/prod
-                  kustomize edit set image \
-                    ghcr.io/naveed-gung/zero-day-guardian/ebpf-monitor:${{ github.ref_name }} \
-                    ghcr.io/naveed-gung/zero-day-guardian/detection-engine:${{ github.ref_name }} \
-                    ghcr.io/naveed-gung/zero-day-guardian/guardian-operator:${{ github.ref_name }}
-                  cd ../../..
-                  kustomize build deploy/overlays/prod > guardian-manifests-${{ steps.version.outputs.VERSION }}.yaml
+                  set -euo pipefail
+                  digest_ref() {
+                    local repository="$IMAGE_PREFIX/$1"
+                    local digest
+                    digest="$(docker buildx imagetools inspect "$repository:$GITHUB_REF_NAME" --format '{{.Manifest.Digest}}')"
+                    [[ "$digest" =~ ^sha256:[a-f0-9]{64}$ ]] || return 1
+                    printf '%s@%s' "$repository" "$digest"
+                  }
+                  monitor="$(digest_ref ebpf-monitor)"
+                  detector="$(digest_ref detection-engine)"
+                  operator="$(digest_ref guardian-operator)"
+                  kubectl set env --local -f deploy/base/operator-deployment.yaml \
+                    "GUARDIAN_MONITOR_IMAGE=$monitor" "GUARDIAN_DETECTOR_IMAGE=$detector" -o yaml > operator-release.yaml
+                  mv operator-release.yaml deploy/base/operator-deployment.yaml
+                  (
+                    cd deploy/overlays/prod
+                    kustomize edit set image \
+                      "ghcr.io/naveed-gung/zero-day-guardian/ebpf-monitor=$monitor" \
+                      "ghcr.io/naveed-gung/zero-day-guardian/detection-engine=$detector" \
+                      "ghcr.io/naveed-gung/zero-day-guardian/guardian-operator=$operator"
+                  )
+                  kustomize build deploy/overlays/prod > "guardian-manifests-${VERSION}.yaml"
 
             - name: Create GitHub Release
-              uses: softprops/action-gh-release@v2
+              uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
               with:
                   files: |
                       guardian-manifests-${{ steps.version.outputs.VERSION }}.yaml

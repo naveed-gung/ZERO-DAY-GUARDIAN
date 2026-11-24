@@ -38,7 +38,7 @@ spec:
       containers:
         # eBPF monitor - kernel-space syscall tracing
         - name: ebpf-monitor
-          image: ghcr.io/naveed-gung/zero-day-guardian/ebpf-monitor:latest
+          image: ghcr.io/naveed-gung/zero-day-guardian/ebpf-monitor:v1.0.0
           securityContext:
             privileged: true
             runAsUser: 0
@@ -77,7 +77,7 @@ spec:
 
         # Detection engine - event processing and threat response
         - name: detection-engine
-          image: ghcr.io/naveed-gung/zero-day-guardian/detection-engine:latest
+          image: ghcr.io/naveed-gung/zero-day-guardian/detection-engine:v1.0.0
           resources:
             requests:
               cpu: 200m

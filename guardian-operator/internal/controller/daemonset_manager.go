@@ -3,6 +3,7 @@ package controller
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -20,8 +21,8 @@ import (
 )
 
 const (
-	ebpfMonitorImage    = "ghcr.io/naveed-gung/zero-day-guardian/ebpf-monitor:latest"
-	detectionImage      = "ghcr.io/naveed-gung/zero-day-guardian/detection-engine:latest"
+	ebpfMonitorImage    = "ghcr.io/naveed-gung/zero-day-guardian/ebpf-monitor:v1.0.0"
+	detectionImage      = "ghcr.io/naveed-gung/zero-day-guardian/detection-engine:v1.0.0"
 	operatorNameLabel   = "app.kubernetes.io/managed-by"
 	operatorNameValue   = "guardian-operator"
 	componentLabel      = "app.kubernetes.io/component"
@@ -32,7 +33,9 @@ const (
 // DaemonSetManager manages the Guardian DaemonSet lifecycle.
 type DaemonSetManager struct {
 	client.Client
-	Namespace string
+	Namespace     string
+	MonitorImage  string
+	DetectorImage string
 }
 
 // Reconcile ensures the DaemonSet exists and matches the policy spec.
@@ -144,7 +147,7 @@ func (m *DaemonSetManager) buildDaemonSet(policy *guardianv1alpha1.GuardianPolic
 					Containers: []corev1.Container{
 						{
 							Name:  "ebpf-monitor",
-							Image: ebpfMonitorImage,
+							Image: configuredImage(m.MonitorImage, ebpfMonitorImage),
 							SecurityContext: &corev1.SecurityContext{
 								Privileged: &privileged,
 								RunAsUser:  &runAsRoot,
@@ -200,7 +203,7 @@ func (m *DaemonSetManager) buildDaemonSet(policy *guardianv1alpha1.GuardianPolic
 						},
 						{
 							Name:  "detection-engine",
-							Image: detectionImage,
+							Image: configuredImage(m.DetectorImage, detectionImage),
 							Resources: corev1.ResourceRequirements{
 								Requests: corev1.ResourceList{
 									corev1.ResourceCPU:    resource.MustParse("200m"),
@@ -319,6 +322,14 @@ func buildDetectionEnv(policy *guardianv1alpha1.GuardianPolicy) []corev1.EnvVar 
 			Value: fmt.Sprintf("%t", policy.Spec.Response.DryRun),
 		},
 		{
+			Name:  "GUARDIAN_ACTION_APPROVED_NAMESPACES",
+			Value: strings.Join(policy.Spec.Response.ApprovedNamespaces, ","),
+		},
+		{
+			Name:  "GUARDIAN_ACTION_EXCLUDED_NAMESPACES",
+			Value: strings.Join(policy.Spec.Response.ExcludedNamespaces, ","),
+		},
+		{
 			Name:  "GUARDIAN_ACTION_RATE_LIMIT_PER_MINUTE",
 			Value: fmt.Sprintf("%d", policy.Spec.Response.RateLimitPerMinute),
 		},
@@ -367,6 +378,13 @@ func secretEnv(envName string, ref *guardianv1alpha1.SecretRef) corev1.EnvVar {
 			},
 		},
 	}
+}
+
+func configuredImage(value, fallback string) string {
+	if value == "" {
+		return fallback
+	}
+	return value
 }
 
 func daemonSetName(policy *guardianv1alpha1.GuardianPolicy) string {

@@ -15,15 +15,16 @@ subjects:
     namespace: guardian-system
 ---
 apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
+kind: RoleBinding
 metadata:
+  namespace: guardian-system
   name: guardian-operator
   labels:
     app.kubernetes.io/name: zero-day-guardian
     app.kubernetes.io/component: operator
 roleRef:
   apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
+  kind: Role
   name: guardian-operator
 subjects:
   - kind: ServiceAccount

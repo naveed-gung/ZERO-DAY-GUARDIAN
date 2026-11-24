@@ -41,8 +41,6 @@ public class SafeActionExecutor {
     private static final Logger log = LoggerFactory.getLogger(SafeActionExecutor.class);
 
     private final PodIsolator podIsolator;
-    private final NetworkBlocker networkBlocker;
-    private final ProcessKiller processKiller;
     private final ActionTracker actionTracker;
     private final MeterRegistry meterRegistry;
 
@@ -60,7 +58,10 @@ public class SafeActionExecutor {
 
     /** System-level namespaces that can never be targeted for automated actions. */
     private static final Set<String> IMMUTABLE_EXCLUSIONS = Set.of(
-            "kube-system", "kube-public", "kube-node-lease");
+            "kube-system", "kube-public", "kube-node-lease", "guardian-system");
+
+    @Value("${guardian.node.name:unknown}")
+    private String nodeName;
 
     private Counter actionsExecuted;
     private Counter actionsBlocked;
@@ -68,13 +69,9 @@ public class SafeActionExecutor {
 
     public SafeActionExecutor(
             PodIsolator podIsolator,
-            NetworkBlocker networkBlocker,
-            ProcessKiller processKiller,
             ActionTracker actionTracker,
             MeterRegistry meterRegistry) {
         this.podIsolator = podIsolator;
-        this.networkBlocker = networkBlocker;
-        this.processKiller = processKiller;
         this.actionTracker = actionTracker;
         this.meterRegistry = meterRegistry;
     }
@@ -88,7 +85,7 @@ public class SafeActionExecutor {
                 .description("Actions blocked by safety gates")
                 .register(meterRegistry);
         actionsDryRun = Counter.builder("guardian.action.dry_run")
-                .description("Actions that would have executed in non-dry-run mode")
+                .description("Response candidates recorded in observe-only mode")
                 .register(meterRegistry);
 
         log.info("SafeActionExecutor initialized: dryRun={}, rateLimit={}/min, approved={}, excluded={}",
@@ -109,146 +106,50 @@ public class SafeActionExecutor {
             return;
         }
 
-        String namespace = resolveNamespace(event);
-
-        // Gate 2: Namespace exclusion
-        if (isExcludedNamespace(namespace)) {
-            actionsBlocked.increment();
-            log.warn("SAFETY GATE: Action blocked for excluded namespace '{}' (event pid={}, category={})",
-                    namespace, event.pid(), result.category());
-            return;
-        }
-
-        // Gate 3: Approved namespace check
-        if (!isApprovedNamespace(namespace)) {
-            actionsBlocked.increment();
-            log.warn("SAFETY GATE: Action blocked for unapproved namespace '{}' (event pid={}, category={})",
-                    namespace, event.pid(), result.category());
-            return;
-        }
-
-        // Gate 4: Rate limiting
-        if (!actionTracker.tryAcquire()) {
-            actionsBlocked.increment();
-            log.warn("SAFETY GATE: Action rate-limited (event pid={}, category={})",
-                    event.pid(), result.category());
-            return;
-        }
-
-        // Gate 5: Dry-run mode
         if (dryRun) {
             actionsDryRun.increment();
-            log.info("DRY-RUN: Would execute response for {} in namespace '{}' (pid={}, severity={}, category={})",
-                    event.containerId(), namespace, event.pid(), result.severity(), result.category());
-            actionTracker.record(event, result, "DRY_RUN");
+            actionTracker.record(event, result, "OBSERVE_ONLY");
             return;
         }
 
-        // All gates passed: execute the response
-        executeAction(event, result, namespace);
-    }
-
-    private void executeAction(SyscallEvent event, DetectionResult result, String namespace) {
-        String containerId = event.containerId();
-        log.info("Executing automated response: severity={} category={} container={} namespace={}",
-                result.severity(), result.category(), containerId, namespace);
-
-        actionsExecuted.increment();
-
-        boolean isolated = false;
-        boolean networkBlocked = false;
+        var namespaces = approvedNamespaces.stream()
+                .map(String::trim)
+                .filter(namespace -> !namespace.isEmpty())
+                .filter(namespace -> !IMMUTABLE_EXCLUSIONS.contains(namespace))
+                .filter(namespace -> excludedNamespaces.stream().noneMatch(excluded -> excluded.trim().equals(namespace)))
+                .distinct()
+                .toList();
+        if (namespaces.isEmpty() || !event.isFromContainer()) {
+            actionsBlocked.increment();
+            actionTracker.record(event, result, "BLOCKED_SCOPE");
+            return;
+        }
+        if (!actionTracker.tryAcquire()) {
+            actionsBlocked.increment();
+            actionTracker.record(event, result, "RATE_LIMITED");
+            return;
+        }
 
         try {
-            // For CRITICAL container-escape: kill the offending process first
-            if (result.severity() == DetectionResult.Severity.CRITICAL
-                    && "container-escape".equals(result.category())) {
-                try {
-                    processKiller.killProcess(containerId, namespace, event.pid(), result);
-                } catch (Exception e) {
-                    log.warn("Process kill failed for pid={} in container {}: {}",
-                            event.pid(), containerId, e.getMessage());
-                    // Continue with isolation even if kill fails
-                }
+            var target = podIsolator.resolve(event.containerId(), nodeName, namespaces);
+            if (target.isEmpty()) {
+                actionsBlocked.increment();
+                actionTracker.record(event, result, "TARGET_UNRESOLVED");
+                return;
             }
 
-            // For CRITICAL: isolate pod AND block network
-            if (result.severity() == DetectionResult.Severity.CRITICAL) {
-                podIsolator.isolatePod(containerId, namespace, result);
-                isolated = true;
-                networkBlocker.blockPodNetwork(containerId, namespace, result);
-                networkBlocked = true;
-                actionTracker.record(event, result, "ISOLATE_AND_BLOCK");
+            var pod = target.get();
+            boolean applied = podIsolator.labelPod(pod);
+            if (applied) {
+                actionsExecuted.increment();
             }
-            // For HIGH: isolate pod only
-            else {
-                podIsolator.isolatePod(containerId, namespace, result);
-                isolated = true;
-                actionTracker.record(event, result, "ISOLATE");
-            }
-        } catch (Exception e) {
-            log.error("Action execution failed for container {}: {}", containerId, e.getMessage(), e);
-
-            // Rollback: undo any partially applied actions
-            rollback(containerId, namespace, isolated, networkBlocked);
-
-            actionTracker.record(event, result, "FAILED:" + e.getMessage());
+            log.info("Response target namespace={} pod={} uid={} labelApplied={}",
+                    pod.getMetadata().getNamespace(), pod.getMetadata().getName(),
+                    pod.getMetadata().getUid(), applied);
+            actionTracker.record(event, result, applied ? "LABEL_APPLIED" : "ALREADY_LABELED");
+        } catch (io.kubernetes.client.openapi.ApiException e) {
+            actionTracker.record(event, result, "KUBERNETES_API_ERROR_" + e.getCode());
+            log.warn("Kubernetes response request failed (status={})", e.getCode());
         }
-    }
-
-    /**
-     * Rollback partially applied defensive actions on failure.
-     * <p>
-     * If pod isolation was applied but network blocking failed (or vice versa),
-     * undo the completed actions to avoid leaving the pod in an inconsistent state.
-     * </p>
-     */
-    private void rollback(String containerId, String namespace, boolean wasIsolated, boolean wasNetworkBlocked) {
-        if (wasIsolated) {
-            try {
-                podIsolator.removeQuarantine(containerId, namespace);
-                log.info("Rollback: removed quarantine label from container {} in {}", containerId, namespace);
-            } catch (Exception rollbackErr) {
-                log.error("Rollback failed: could not remove quarantine from container {}: {}",
-                        containerId, rollbackErr.getMessage());
-            }
-        }
-
-        if (wasNetworkBlocked) {
-            try {
-                networkBlocker.removeBlockPolicy(containerId, namespace);
-                log.info("Rollback: removed NetworkPolicy for container {} in {}", containerId, namespace);
-            } catch (Exception rollbackErr) {
-                log.error("Rollback failed: could not remove NetworkPolicy for container {}: {}",
-                        containerId, rollbackErr.getMessage());
-            }
-        }
-    }
-
-    private String resolveNamespace(SyscallEvent event) {
-        // Container ID format from CRI: <runtime>://<id>
-        // In a real deployment, we would query the K8s API for the pod's namespace.
-        // For now, return "default" if we can't resolve.
-        return "default";
-    }
-
-    private boolean isExcludedNamespace(String namespace) {
-        if (namespace == null)
-            return true;
-        if (IMMUTABLE_EXCLUSIONS.contains(namespace))
-            return true;
-        return excludedNamespaces.stream()
-                .anyMatch(ns -> ns.trim().equalsIgnoreCase(namespace));
-    }
-
-    private boolean isApprovedNamespace(String namespace) {
-        if (approvedNamespaces == null || approvedNamespaces.isEmpty()) {
-            // If no approved list is configured, allow all non-excluded namespaces
-            return true;
-        }
-        if (approvedNamespaces.size() == 1 && approvedNamespaces.getFirst().isEmpty()) {
-            return true;
-        }
-        return approvedNamespaces.stream()
-                .anyMatch(ns -> ns.trim().equalsIgnoreCase(namespace));
     }
 }

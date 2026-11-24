@@ -35,6 +35,17 @@ patches:
         path: /spec/template/spec/containers/1/resources/limits/memory
         value: "256Mi"
 
+  - target:
+      kind: Deployment
+      name: guardian-operator
+    patch: |
+      - op: replace
+        path: /spec/template/spec/containers/0/env/0/value
+        value: ghcr.io/naveed-gung/zero-day-guardian/ebpf-monitor:dev
+      - op: replace
+        path: /spec/template/spec/containers/0/env/1/value
+        value: ghcr.io/naveed-gung/zero-day-guardian/detection-engine:dev
+
 images:
   - name: ghcr.io/naveed-gung/zero-day-guardian/ebpf-monitor
     newTag: dev

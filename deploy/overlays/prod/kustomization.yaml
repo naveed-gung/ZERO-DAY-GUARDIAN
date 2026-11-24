@@ -14,7 +14,7 @@ patches:
     patch: |
       - op: replace
         path: /data/GUARDIAN_ACTION_DRY_RUN
-        value: "false"
+        value: "true"
       - op: replace
         path: /data/GUARDIAN_ACTION_RATE_LIMIT_PER_MINUTE
         value: "5"

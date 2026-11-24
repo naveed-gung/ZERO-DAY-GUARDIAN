@@ -54,7 +54,7 @@ type ResponseConfig struct {
 	RateLimitPerMinute int `json:"rateLimitPerMinute"`
 
 	// ApprovedNamespaces restricts which namespaces can receive automated actions.
-	// Empty list means all non-excluded namespaces.
+	// Empty list disables automated mutations.
 	// +optional
 	ApprovedNamespaces []string `json:"approvedNamespaces,omitempty"`
 

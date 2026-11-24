@@ -89,6 +89,13 @@ func (r *GuardianPolicyReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 		return ctrl.Result{RequeueAfter: requeueInterval}, err
 	}
 
+	// Report the policy generation used to reconcile the DaemonSet.
+	if policy.Spec.Response.DryRun || len(policy.Spec.Response.ApprovedNamespaces) == 0 {
+		r.setCondition(&policy, "ResponseMode", metav1.ConditionFalse, "ObserveOnly", "Workload mutation is disabled")
+	} else {
+		r.setCondition(&policy, "ResponseMode", metav1.ConditionTrue, "LabelRequested", "Pod labeling requires explicit namespace RBAC")
+	}
+
 	// Update status
 	policy.Status.MonitoredNodes = nodeCount
 	if policy.Spec.Detection.Enabled {
@@ -122,6 +129,7 @@ func (r *GuardianPolicyReconciler) setCondition(
 ) {
 	meta.SetStatusCondition(&policy.Status.Conditions, metav1.Condition{
 		Type:               condType,
+		ObservedGeneration: policy.Generation,
 		Status:             status,
 		Reason:             reason,
 		Message:            message,

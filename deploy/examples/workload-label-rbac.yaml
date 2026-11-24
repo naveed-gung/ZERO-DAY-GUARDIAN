@@ -1,0 +1,24 @@
+# Set both namespaces below to the opted-in workload namespace.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: guardian-workload-labeler
+  namespace: example-workloads
+rules:
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: guardian-workload-labeler
+  namespace: example-workloads
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: guardian-workload-labeler
+subjects:
+  - kind: ServiceAccount
+    name: guardian-monitor
+    namespace: guardian-system

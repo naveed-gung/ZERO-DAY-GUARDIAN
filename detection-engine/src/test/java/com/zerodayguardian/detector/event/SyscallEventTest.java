@@ -53,15 +53,14 @@ class SyscallEventTest {
     }
 
     @Test
-    void timestampShouldConvertCorrectly() {
+    void timestampShouldPreserveMonotonicNanoseconds() {
         ByteBuffer buf = createTestEvent(
                 SyscallEvent.MAGIC, 1, 1, 0,
                 1_500_000_000_000_000_000L,
                 0, 0, 0, 0, "", "", 0L, "");
 
         SyscallEvent event = SyscallEvent.decode(buf);
-        assertEquals(1_500_000_000L, event.timestamp().getEpochSecond());
-        assertEquals(0L, event.timestamp().getNano());
+        assertEquals(1_500_000_000_000_000_000L, event.timestampNs());
     }
 
     @Test
@@ -87,9 +86,9 @@ class SyscallEventTest {
         buf.order(ByteOrder.LITTLE_ENDIAN);
 
         buf.putInt(magic);
-        buf.putInt(version);
-        buf.putInt(eventType);
-        buf.putInt(flags);
+        buf.put((byte) version);
+        buf.put((byte) eventType);
+        buf.putShort((short) flags);
         buf.putLong(timestampNs);
         buf.putInt(pid);
         buf.putInt(tgid);
@@ -101,6 +100,8 @@ class SyscallEventTest {
         buf.putLong(cgroupId);
         putFixedString(buf, containerId, 64);
 
+        buf.putInt(59); // syscall number
+        buf.putInt(-1); // return value
         buf.flip();
         return buf;
     }

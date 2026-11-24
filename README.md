@@ -5,7 +5,7 @@
 <h1 align="center">ZERO-DAY GUARDIAN</h1>
 
 <p align="center">
-  <strong>Production Kubernetes Security Monitoring System</strong><br/>
+  <strong>Kubernetes Runtime Security Monitoring</strong><br/>
   Real-time container threat detection, automated defense, and forensic evidence collection.
 </p>
 
@@ -21,9 +21,51 @@
 
 ---
 
+## Run the free Bazaar demo
+
+Run [Bazaar’s real inventory permission code](https://github.com/naveed-gung/bazaar/blob/main/packages/shared/src/permissions.ts) and Guardian’s offline detection replay with Python 3.9+, JDK 21, and Node.js 24+. No package install, Kubernetes cluster, or cloud account is needed.
+
+```sh
+python -B examples/bazaar_demo.py
+```
+
+### Verified terminal output
+
+```text
+[1/3] Bazaar inventory permission check (upstream TypeScript)
+      customer → inventory:manage → DENIED
+      ops → inventory:manage → ALLOWED
+[2/3] Decoded two 384-byte records with Guardian's Java decoder
+      Baseline fixture: no alert
+      Synthetic fixture: CRITICAL / container-escape / T1611 / rule score 0.98
+[3/3] PASS: replay completed without Kubernetes writes
+```
+
+Bazaar’s permission check and Guardian’s runtime detection are independent. The replay uses synthetic records and makes no cluster writes. See the [Bazaar demo guide](examples/bazaar/README.md) for scope and provenance. Both demos also run in the [Java CI job](https://github.com/naveed-gung/ZERO-DAY-GUARDIAN/actions/workflows/ci.yml).
+
+## Alternative demo: EduFlow
+
+<img src="examples/eduflow/eduflow-favicon.svg" width="36" height="36" alt="EduFlow logo" align="right">
+
+**One command. Python and JDK 21. No cloud account or cluster required.** The demo serves an original asset from [EduFlow](https://github.com/naveed-gung/eduflow) in-process, then replays two synthetic event records through the same decoder and rules used by Guardian's detection engine.
+
+```sh
+python examples/eduflow/demo.py
+```
+
+```text
+[1/3] EduFlow favicon: in-process HTTP 200, 251 bytes, SHA-256 72dcb5e3c0ad
+[2/3] Decoded two 384-byte records with Guardian's Java decoder
+      Baseline fixture: no alert
+      Synthetic fixture: CRITICAL / container-escape / T1611 / rule score 0.98
+[3/3] PASS: replay completed without Kubernetes writes
+```
+
+[How the demo works](examples/eduflow/README.md) · [Live Kubernetes verification](docs/response-hardening.md)
+
 ## Overview
 
-Zero-Day Guardian is a production-grade security monitoring system that deploys directly into a Kubernetes cluster to monitor real containers, detect real attacks, and take real defensive actions. It is a **headless, infrastructure-level system** -- there is no web UI or dashboard. All interaction is through Kubernetes CRDs, kubectl, metrics endpoints, and SIEM integrations.
+Zero-Day Guardian is a headless Kubernetes runtime security monitor. It collects syscall telemetry with eBPF, evaluates detection rules in Java, and configures deployment through a Go operator. Operators work through Kubernetes CRDs, kubectl, Prometheus metrics, and SIEM integrations.
 
 The system combines three purpose-built components across three languages:
 
@@ -33,7 +75,7 @@ The system combines three purpose-built components across three languages:
 | **Detection Engine** | Java (Spring Boot 3) | Analyzes event streams, detects attack patterns, integrates threat intelligence, executes defensive actions |
 | **Cluster Operator** | Go (Kubebuilder)     | Manages CRD-based security policies, orchestrates DaemonSet deployment, handles cluster-wide remediation    |
 
-All components are production-ready, using real APIs and real Kubernetes integration.
+The default install observes and alerts. Optional response can label an explicitly approved workload for a separately managed quarantine policy.
 
 Zero-Day Guardian is designed as an **infrastructure-level security primitive**, not an end-user application. It follows the same operational model as other Kubernetes-native security tools (Falco, Cilium, Tetragon):
 
@@ -85,9 +127,7 @@ Java Detection Engine (Spring Boot 3)
     |
     v
 Defensive Actions via Kubernetes API
-    |--- Pod isolation (labels + NetworkPolicy deny-all)
-    |--- Process termination (SIGKILL via container runtime)
-    |--- Service account token rotation
+    |--- Opt-in pod label for an independently managed quarantine policy
     |--- Forensic evidence collection (pod spec, logs, network state)
     |--- SIEM alerting (Splunk HEC / Elasticsearch)
 ```
@@ -139,8 +179,6 @@ Runs as a sidecar in the same DaemonSet pod. Consumes events from the shared rin
 - **Maps to MITRE ATT&CK** (T1611, T1496, T1046, T1021, T1528, T1572, T1055, T1613, T1552.005)
 - **Queries threat intelligence** (VirusTotal, AbuseIPDB, AlienVault OTX) for enrichment
 - **Executes defensive actions** through a safety-gated executor with rate limiting and rollback
-- **Terminates malicious processes** (SIGKILL via Kubernetes exec API for critical escape detections)
-- **Rotates service account tokens** when compromise is detected
 - **Monitors audit logs** for exec, attach, and portforward operations
 
 **Stack**: Spring Boot 3.3.6, Java 21, Kubernetes Java Client 21.0.2, Micrometer/Prometheus, Gradle 8.9
@@ -257,7 +295,7 @@ spec:
 
   # Automated response configuration
   response:
-    dryRun: false # Set true to log without acting
+    dryRun: true # Observe detections without changing workloads
     rateLimitPerMinute: 10 # Max actions per target per minute
     excludedNamespaces: # Always protected from automated actions
       - kube-system
@@ -375,7 +413,9 @@ kubectl apply -k deploy/overlays/dev
 kubectl apply -k deploy/overlays/prod
 ```
 
-### 4. Apply a Security Policy
+### 4. Choose the DaemonSet owner
+
+The Kustomize install already includes a standalone DaemonSet. The operator creates an additional DaemonSet for each GuardianPolicy. For operator-managed monitoring, remove the standalone DaemonSet from your deployment configuration before applying a single policy with a non-overlapping node selector.
 
 ```bash
 kubectl apply -f deploy/examples/guardianpolicy-sample.yaml
@@ -508,23 +548,14 @@ Sliding-window pattern matching across system call streams:
 
 ## Defensive Actions
 
-All automated actions pass through the `SafeActionExecutor` which enforces:
+Guardian observes by default. To enable pod labeling, configure a GuardianPolicy with
+`response.dryRun: false` and explicit `response.approvedNamespaces`, then grant
+namespace-scoped RBAC. Guardian checks the local node, running container ID, pod UID,
+and resource version before applying the quarantine label. Observe-only, unresolved
+targets, API errors, and label application have separate audit outcomes.
 
-1. **Environment approval** -- verifies the target namespace is in the approved list
-2. **Threat validation** -- confirms the threat score exceeds the configured threshold
-3. **Rate limiting** -- caps actions per target per minute to prevent cascading failures
-4. **Dry-run mode** -- logs intended actions without executing (configurable via CRD)
-5. **Automatic rollback** -- reverts partial actions on failure
-
-| Action                  | Description                                                                             | Reversible |
-| ----------------------- | --------------------------------------------------------------------------------------- | ---------- |
-| **Pod Isolation**       | Adds `security.zerodayguardian.io/isolated: true` label, applies deny-all NetworkPolicy | Yes        |
-| **Process Termination** | Sends SIGKILL to offending process via container runtime                                | No         |
-| **Token Rotation**      | Rotates compromised service account tokens                                              | Yes        |
-| **Forensic Collection** | Captures pod spec, container logs, network state as structured JSON                     | N/A        |
-| **SIEM Alert**          | Forwards structured alert payload to Splunk HEC and/or Elasticsearch                    | N/A        |
-
----
+A label records the response request. Use the optional Cilium deny policy and
+independently verify network enforcement. See [response hardening](docs/response-hardening.md).
 
 ## Metrics
 
@@ -597,7 +628,7 @@ The `test-attack.sh` script deploys a test namespace with controlled attack simu
 ./scripts/test-attack.sh
 ```
 
-This creates isolated test pods that trigger each detection pattern and verifies the system responds correctly. Only run this in non-production clusters.
+This creates isolated test pods that trigger each detection pattern and verifies the system responds correctly. See the response hardening guide for benign validation fixtures.
 
 ---
 
@@ -609,7 +640,7 @@ This system requires elevated privileges by design. See [docs/security-considera
 
 - The eBPF monitor container runs as privileged with `BPF`, `SYS_ADMIN`, and `NET_ADMIN` capabilities
 - `hostPID` and `hostNetwork` are required for full system call and network visibility
-- All defensive actions pass through the `SafeActionExecutor` with environment approval, threat validation, rate limiting, and automatic rollback
+- The opt-in label action passes through `SafeActionExecutor` with workload attribution, namespace approval, and rate limiting
 - The `kube-system`, `kube-public`, and `kube-node-lease` namespaces are excluded from all automated actions by default
 - All actions are logged with full audit trail for forensic review
 - Service account permissions follow least-privilege principles per component

@@ -1,0 +1,14 @@
+# Optional. Apply only in a namespace with Cilium policy enforcement.
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: guardian-quarantine
+  namespace: example-workloads
+spec:
+  endpointSelector:
+    matchLabels:
+      guardian.zerodayguardian.io/quarantined: "true"
+  ingressDeny:
+    - fromEntities: [all]
+  egressDeny:
+    - toEntities: [all]

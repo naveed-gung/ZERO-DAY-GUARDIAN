@@ -161,9 +161,9 @@ func TestBuildDetectionEnv(t *testing.T) {
 
 	envs := buildDetectionEnv(policy)
 
-	// Base envs: RINGBUFFER_PATH, DRY_RUN, RATE_LIMIT, NODE_NAME, POD_NAME = 5
+	// Base environment includes approved and excluded namespace lists.
 	// Threat intel: VT + AbuseIPDB = 2
-	assert.Len(t, envs, 7)
+	assert.Len(t, envs, 9)
 
 	// Verify secret refs
 	var vtEnv, abuseEnv *corev1.EnvVar
